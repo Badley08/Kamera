@@ -13,14 +13,17 @@ import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
 
-class CameraManagerInstance(private val context: Context) {
+class CameraManagerInstance(
+    private val context: Context,
+    private val state: VideoAppState? = null
+) {
 
     private val cameraManager = context.getSystemService(Context.CAMERA_SERVICE) as CameraManager
     private var cameraDevice: CameraDevice? = null
     private var captureSession: CameraCaptureSession? = null
     private var mediaRecorder: MediaRecorder? = null
 
-    // Force la 3ème caméra ("2")
+    // Target camera ID (camera "2")
     private val forcedCameraId = "2"
 
     private var currentZoom = 1.0f
@@ -105,6 +108,7 @@ class CameraManagerInstance(private val context: Context) {
                         captureSession = session
                         session.setRepeatingRequest(builder.build(), null, null)
                         mediaRecorder?.start()
+                        state?.isRecording?.value = true
                     }
 
                     override fun onConfigureFailed(session: CameraCaptureSession) {}
@@ -122,6 +126,7 @@ class CameraManagerInstance(private val context: Context) {
             mediaRecorder?.reset()
             mediaRecorder?.release()
             mediaRecorder = null
+            state?.isRecording?.value = false
             createPreviewSession()
         } catch (e: Exception) {
             e.printStackTrace()
@@ -130,11 +135,13 @@ class CameraManagerInstance(private val context: Context) {
 
     fun setZoom(zoom: Float) {
         currentZoom = zoom
+        state?.currentZoom?.value = zoom
         updateRepeatingRequest()
     }
 
-    fun toggleFlash(enable: Boolean) {
+    fun toggleFlash(enable: Boolean = !isFlashOn) {
         isFlashOn = enable
+        state?.flashEnabled?.value = enable
         updateRepeatingRequest()
     }
 
@@ -155,7 +162,7 @@ class CameraManagerInstance(private val context: Context) {
     }
 
     private fun applyQualitySettings(builder: CaptureRequest.Builder) {
-        // --- Optimisations Qualité Maximale ISP (Spectra) ---
+        // --- ISP quality optimization settings ---
         builder.set(CaptureRequest.NOISE_REDUCTION_MODE, CaptureRequest.NOISE_REDUCTION_MODE_HIGH_QUALITY)
         builder.set(CaptureRequest.EDGE_MODE, CaptureRequest.EDGE_MODE_HIGH_QUALITY)
         builder.set(CaptureRequest.COLOR_CORRECTION_MODE, CaptureRequest.COLOR_CORRECTION_MODE_HIGH_QUALITY)
@@ -163,14 +170,14 @@ class CameraManagerInstance(private val context: Context) {
         builder.set(CaptureRequest.CONTROL_AF_MODE, CaptureRequest.CONTROL_AF_MODE_CONTINUOUS_VIDEO)
         builder.set(CaptureRequest.CONTROL_AE_MODE, CaptureRequest.CONTROL_AE_MODE_ON)
 
-        // Gestion du Flash (Torch)
+        // Toggle flashlight mode
         if (isFlashOn) {
             builder.set(CaptureRequest.FLASH_MODE, CaptureRequest.FLASH_MODE_TORCH)
         } else {
             builder.set(CaptureRequest.FLASH_MODE, CaptureRequest.FLASH_MODE_OFF)
         }
 
-        // Gestion du Zoom Numérique (Crop Region)
+        // Digital zoom crop calculation
         val characteristics = cameraManager.getCameraCharacteristics(forcedCameraId)
         val arrayRect = characteristics.get(CameraCharacteristics.SENSOR_INFO_ACTIVE_ARRAY_SIZE)
         if (arrayRect != null) {
@@ -190,7 +197,7 @@ class CameraManagerInstance(private val context: Context) {
             setOutputFormat(MediaRecorder.OutputFormat.MPEG_4)
             setOutputFile(file.absolutePath)
 
-            // Encodage HEVC (H.265) 1080p @ 20 Mbps pour qualité maximale sans surcharge CPU
+            // 1080p HEVC (H.265) video encoding at 20 Mbps
             setVideoEncoder(MediaRecorder.VideoEncoder.HEVC)
             setAudioEncoder(MediaRecorder.AudioEncoder.AAC)
             setVideoSize(1920, 1080)

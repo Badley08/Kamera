@@ -28,7 +28,7 @@ class MainActivity : ComponentActivity() {
     private lateinit var cameraManager: CameraManagerInstance
     private val appState = VideoAppState()
 
-    // Gestionnaire de demande de permissions multiples au lancement
+    // Multiple runtime permissions launcher
     private val requestPermissionsLauncher = registerForActivityResult(
         ActivityResultContracts.RequestMultiplePermissions()
     ) { permissions ->
@@ -40,7 +40,7 @@ class MainActivity : ComponentActivity() {
         } else {
             Toast.makeText(
                 this,
-                "Les autorisations caméra et micro sont nécessaires pour utiliser l'application.",
+                "Camera and microphone permissions are required to use this application.",
                 Toast.LENGTH_LONG
             ).show()
         }
@@ -51,13 +51,13 @@ class MainActivity : ComponentActivity() {
 
         cameraManager = CameraManagerInstance(this, appState)
 
-        // Vérification des permissions au démarrage
+        // Check required permissions on startup
         checkAndRequestPermissions()
 
         setContent {
             KameraTheme {
                 if (appState.hasPermissions.value) {
-                    // Écran principal de la caméra si les permissions sont accordées
+                    // Main camera interface when permissions are granted
                     Box(modifier = Modifier.fillMaxSize().background(Color.Black)) {
                         Camera2Preview(
                             cameraManager = cameraManager,
@@ -72,7 +72,7 @@ class MainActivity : ComponentActivity() {
                         )
                     }
                 } else {
-                    // Écran d'explication clair si les permissions ont été refusées
+                    // Permission rationale screen when permissions are missing
                     PermissionExplanationScreen(
                         onRequestPermissions = { checkAndRequestPermissions() }
                     )
@@ -87,7 +87,7 @@ class MainActivity : ComponentActivity() {
             Manifest.permission.RECORD_AUDIO
         )
 
-        // Inutile de demander WRITE_EXTERNAL_STORAGE sur Android 10+ (Scoped Storage géré par MediaStore)
+        // Legacy storage permissions for Android 9 and below (Scoped Storage on Android 10+)
         if (Build.VERSION.SDK_INT <= Build.VERSION_CODES.P) {
             permissionsToRequest.add(Manifest.permission.WRITE_EXTERNAL_STORAGE)
         }

@@ -1,13 +1,13 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <!-- Couleurs de base -->
+    <!-- Base colors -->
     <color name="black">#FF000000</color>
     <color name="white">#FFFFFFFF</color>
     
-    <!-- Rouge OnePlus Signature -->
+    <!-- OnePlus main camera color -->
     <color name="oneplus_red">#FFF00000</color>
     
-    <!-- Couleurs système pour la barre de statut -->
+    <!-- System bar colors -->
     <color name="statusBarColor">#FF000000</color>
     <color name="navigationBarColor">#FF000000</color>
 </resources>

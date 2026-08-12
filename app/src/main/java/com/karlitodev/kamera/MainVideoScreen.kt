@@ -26,8 +26,6 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 
-val OnePlusRed = Color(0xFFF00000)
-
 @Composable
 fun MainVideoScreen(
     state: VideoAppState,
@@ -38,7 +36,7 @@ fun MainVideoScreen(
 ) {
     Box(modifier = Modifier.fillMaxSize()) {
         
-        // 1. Flash (Haut gauche)
+        // 1. Flash toggle button (Top left)
         IconButton(
             onClick = onFlashToggle,
             modifier = Modifier.align(Alignment.TopStart).padding(top = 48.dp, start = 24.dp)
@@ -50,23 +48,23 @@ fun MainVideoScreen(
             )
         }
 
-        // 2. Zone de contrôle (Bas)
+        // 2. Camera controls area (Bottom)
         Column(
             modifier = Modifier
                 .align(Alignment.BottomCenter)
                 .padding(bottom = 40.dp),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
-            // L'Arc de cercle de Zoom (Style OnePlus)
+            // Zoom arc indicator
             ZoomArc(currentZoom = state.currentZoom.value)
             
             Spacer(modifier = Modifier.height(20.dp))
 
-            // Bouton Obturateur (Limité à 3.0x pour la stabilité)
+            // Shutter button with drag zoom (capped at 3.0x)
             ShutterButton(
                 isRecording = state.isRecording.value,
                 onZoomRequested = { delta ->
-                    // Zoom strictement bridé à 3.0x max
+                    // Clamp zoom factor between 1.0x and 3.0x
                     val newZoom = (state.currentZoom.value + delta).coerceIn(1.0f, 3.0f)
                     onZoomChange(newZoom)
                 },
@@ -83,10 +81,10 @@ fun ZoomArc(currentZoom: Float) {
             val center = Offset(size.width / 2, size.height)
             val radius = 90.dp.toPx()
             
-            // Progrès calculé sur la plage 1.0 -> 3.0 (Plage de 2.0x)
+            // Normalized zoom progress over 1.0x to 3.0x range
             val progress = (currentZoom - 1f) / 2f
             
-            // Arc de fond (gris translucide)
+            // Translucent background arc
             drawArc(
                 color = Color.White.copy(alpha = 0.2f),
                 startAngle = 180f,
@@ -97,7 +95,7 @@ fun ZoomArc(currentZoom: Float) {
                 style = Stroke(width = 2.dp.toPx(), cap = StrokeCap.Round)
             )
 
-            // Arc actif (Progression du zoom)
+            // Active zoom progress arc
             drawArc(
                 color = Color.White,
                 startAngle = 180f,
@@ -109,7 +107,7 @@ fun ZoomArc(currentZoom: Float) {
             )
         }
         
-        // Indicateur numérique du zoom
+        // Numeric zoom level indicator
         Text(
             text = String.format("%.1fx", currentZoom),
             color = Color.White,
@@ -131,7 +129,7 @@ fun ShutterButton(
             .size(80.dp)
             .pointerInput(Unit) {
                 detectVerticalDragGestures { _, dragAmount ->
-                    // Sensibilité ajustée pour la plage de 1x à 3x
+                    // Drag sensitivity scaled for 1x to 3x zoom range
                     val sensitivity = -0.008f 
                     onZoomRequested(dragAmount * sensitivity)
                 }

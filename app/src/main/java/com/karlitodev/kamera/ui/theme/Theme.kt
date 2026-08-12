@@ -28,7 +28,7 @@ fun KameraTheme(content: @Composable () -> Unit) {
     if (!view.isInEditMode) {
         SideEffect {
             val window = (view.context as Activity).window
-            // Passe la barre de statut en noir avec des icônes claires pour l'UI Caméra
+            // Set status bar to black with light icons for the camera UI
             window.statusBarColor = Color.Black.toArgb()
             WindowCompat.getInsetsController(window, view).isAppearanceLightStatusBars = false
         }

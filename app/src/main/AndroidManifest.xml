@@ -2,7 +2,7 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     package="com.karlitodev.kamera">
 
-    <!-- Declarations de fonctionnalites materielles pour Google Play -->
+    <!-- Hardware feature declarations -->
     <uses-feature
         android:name="android.hardware.camera"
         android:required="true" />
@@ -13,13 +13,13 @@
         android:name="android.hardware.microphone"
         android:required="true" />
 
-    <!-- 1. Permission Appareil Photo -->
+    <!-- 1. Camera permission -->
     <uses-permission android:name="android.permission.CAMERA" />
 
-    <!-- 2. Permission Micro (Enregistrement audio des videos) -->
+    <!-- 2. Microphone permission (video audio recording) -->
     <uses-permission android:name="android.permission.RECORD_AUDIO" />
 
-    <!-- 3. Permissions d'ecriture et de stockage (Compatibilité Android <= 9) -->
+    <!-- 3. Legacy storage permissions (Android 9 and below) -->
     <uses-permission
         android:name="android.permission.WRITE_EXTERNAL_STORAGE"
         android:maxSdkVersion="28" />

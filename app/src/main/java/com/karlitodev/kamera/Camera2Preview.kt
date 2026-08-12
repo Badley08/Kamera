@@ -13,26 +13,26 @@ fun Camera2Preview(
     cameraManager: CameraManagerInstance,
     modifier: Modifier = Modifier
 ) {
-    // AndroidView permet d'intégrer une View Android classique dans Compose
+    // AndroidView integrates standard Android View within Jetpack Compose
     AndroidView(
         modifier = modifier,
         factory = { context ->
-            // TextureView est parfait pour afficher un flux vidéo de caméra
+            // TextureView displays the camera video preview stream
             TextureView(context).apply {
-                // On s'assure que la vue prend toute la place
+                // Match parent dimensions to fill available screen space
                 layoutParams = ViewGroup.LayoutParams(
                     ViewGroup.LayoutParams.MATCH_PARENT,
                     ViewGroup.LayoutParams.MATCH_PARENT
                 )
 
-                // On écoute les événements de la surface
+                // Listen for surface texture lifecycle events
                 surfaceTextureListener = object : TextureView.SurfaceTextureListener {
                     override fun onSurfaceTextureAvailable(
                         surfaceTexture: SurfaceTexture,
                         width: Int,
                         height: Int
                     ) {
-                        // Dès que la surface est prête, on dit au CameraManager de démarrer la preview
+                        // Start camera preview when surface texture is ready
                         cameraManager.startPreview(Surface(surfaceTexture))
                     }
 
@@ -41,17 +41,17 @@ fun Camera2Preview(
                         width: Int,
                         height: Int
                     ) {
-                        // Géré automatiquement par Camera2 dans notre cas simple
+                        // Automatically managed by Camera2 session
                     }
 
                     override fun onSurfaceTextureDestroyed(surfaceTexture: SurfaceTexture): Boolean {
-                        // Quand l'écran est fermé, on coupe la caméra
+                        // Stop camera preview on surface destruction
                         cameraManager.stopPreview()
-                        return true // Retourner true pour indiquer que nous gérons la libération de la surface
+                        return true // Return true to indicate surface release management
                     }
 
                     override fun onSurfaceTextureUpdated(surfaceTexture: SurfaceTexture) {
-                        // Appelé à chaque nouvelle frame, utile pour analyser l'image, mais pas nécessaire ici
+                        // Called on each frame update
                     }
                 }
             }

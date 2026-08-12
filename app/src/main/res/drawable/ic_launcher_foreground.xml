@@ -4,31 +4,31 @@
     android:viewportWidth="1080"
     android:viewportHeight="1080">
 
-    <!-- === CORPS EXTÉRIEUR DE L'OBJECTIF === -->
+    <!-- === LENS EXTERIOR BODY === -->
 
-    <!-- Ombre portée douce sous l'objectif -->
+    <!-- Soft drop shadow under the lens -->
     <path
         android:fillColor="#000000"
         android:fillAlpha="0.15"
         android:pathData="M 540,255 A 295,295 0 1,0 540,845 A 295,295 0 1,0 540,255 Z" />
 
-    <!-- Bague extérieure – métal brossé foncé -->
+    <!-- Outer ring – dark brushed metal -->
     <path
         android:fillColor="#3A3A3C"
         android:pathData="M 540,250 A 290,290 0 1,0 540,830 A 290,290 0 1,0 540,250 Z" />
 
-    <!-- Biseau lumineux extérieur (highlight top) -->
+    <!-- Outer light bevel (top highlight) -->
     <path
         android:fillColor="#FFFFFF"
         android:fillAlpha="0.12"
         android:pathData="M 540,250 A 290,290 0 0,1 830,540 A 286,286 0 0,0 540,254 Z" />
 
-    <!-- Bague intermédiaire – grip texture ring -->
+    <!-- Intermediate ring – textured grip ring -->
     <path
         android:fillColor="#2C2C2E"
         android:pathData="M 540,275 A 265,265 0 1,0 540,805 A 265,265 0 1,0 540,275 Z" />
 
-    <!-- Marquages de grip (8 encoches) -->
+    <!-- Grip markings (8 notches) -->
     <path
         android:fillColor="#48484A"
         android:pathData="M 536,252 h 8 v 28 h -8 z
@@ -40,33 +40,33 @@
                           M 289,719 l 4,-6 h 24 l -4,6 z
                           M 763,355 l 4,-6 h 24 l -4,6 z" />
 
-    <!-- Bague de focus – anneau métallique poli -->
+    <!-- Focus ring – polished metallic ring -->
     <path
         android:fillColor="#48484A"
         android:pathData="M 540,295 A 245,245 0 1,0 540,785 A 245,245 0 1,0 540,295 Z M 540,310 A 230,230 0 1,1 540,770 A 230,230 0 1,1 540,310 Z" />
 
-    <!-- Reflet sur bague de focus -->
+    <!-- Focus ring reflection -->
     <path
         android:fillColor="#FFFFFF"
         android:fillAlpha="0.08"
         android:pathData="M 540,295 A 245,245 0 0,1 785,540 A 241,241 0 0,0 540,299 Z" />
 
-    <!-- === ZONE OPTIQUE INTÉRIEURE === -->
+    <!-- === INNER OPTICAL ZONE === -->
 
-    <!-- Fond noir de la chambre optique -->
+    <!-- Optical chamber dark background -->
     <path
         android:fillColor="#1C1C1E"
         android:pathData="M 540,310 A 230,230 0 1,0 540,770 A 230,230 0 1,0 540,310 Z" />
 
-    <!-- === DIAPHRAGME HEXAGONAL (6 lames) === -->
+    <!-- === HEXAGONAL APERTURE (6 blades) === -->
 
-    <!-- Lame 1 -->
+    <!-- Aperture blade 1 -->
     <path
         android:fillColor="#2C2C2E"
         android:pathData="M 540,350 L 705,445 L 705,635 L 540,730 L 375,635 L 375,445 Z
                           M 540,390 L 670,465 L 670,615 L 540,690 L 410,615 L 410,465 Z" />
 
-    <!-- Reflets inter-lames -->
+    <!-- Inter-blade reflections -->
     <path
         android:fillColor="#FFFFFF"
         android:fillAlpha="0.06"
@@ -76,83 +76,83 @@
         android:fillAlpha="0.04"
         android:pathData="M 705,445 L 705,635 L 670,615 L 670,465 Z" />
 
-    <!-- === SYSTÈME DE LENTILLES === -->
+    <!-- === LENS SYSTEM === -->
 
-    <!-- Lentille extérieure – anneau cyan foncé (coating anti-reflet) -->
+    <!-- Outer lens – dark cyan ring (anti-reflective coating) -->
     <path
         android:fillColor="#0A84FF"
         android:fillAlpha="0.15"
         android:pathData="M 540,400 A 140,140 0 1,0 540,680 A 140,140 0 1,0 540,400 Z M 540,420 A 120,120 0 1,1 540,660 A 120,120 0 1,1 540,420 Z" />
 
-    <!-- Lentille principale – verre bleuté profond -->
+    <!-- Main lens – deep blue glass -->
     <path
         android:fillColor="#0A1A2F"
         android:pathData="M 540,420 A 120,120 0 1,0 540,660 A 120,120 0 1,0 540,420 Z" />
 
-    <!-- Dégradé interne de la lentille – couche intermédiaire -->
+    <!-- Inner lens gradient – intermediate layer -->
     <path
         android:fillColor="#1A2A4A"
         android:fillAlpha="0.7"
         android:pathData="M 540,435 A 105,105 0 1,0 540,645 A 105,105 0 1,0 540,435 Z" />
 
-    <!-- === CAPTEUR CENTRAL (Accent) === -->
+    <!-- === CENTRAL SENSOR ACCENT === -->
 
-    <!-- Halo du capteur -->
+    <!-- Sensor halo -->
     <path
         android:fillColor="#FF453A"
         android:fillAlpha="0.25"
         android:pathData="M 540,465 A 75,75 0 1,0 540,615 A 75,75 0 1,0 540,465 Z" />
 
-    <!-- Capteur principal – rouge cinématique -->
+    <!-- Main sensor – cinematic red -->
     <path
         android:fillColor="#FF453A"
         android:pathData="M 540,480 A 60,60 0 1,0 540,600 A 60,60 0 1,0 540,480 Z" />
 
-    <!-- Capteur intérieur – orange chaud -->
+    <!-- Inner sensor – warm orange -->
     <path
         android:fillColor="#FF6B3D"
         android:pathData="M 540,500 A 40,40 0 1,0 540,580 A 40,40 0 1,0 540,500 Z" />
 
-    <!-- Point chaud central – lumière vive -->
+    <!-- Central hotspot – bright center -->
     <path
         android:fillColor="#FF9F0A"
         android:fillAlpha="0.8"
         android:pathData="M 540,520 A 20,20 0 1,0 540,560 A 20,20 0 1,0 540,520 Z" />
 
-    <!-- === REFLETS ET FLARES === -->
+    <!-- === REFLECTIONS AND FLARES === -->
 
-    <!-- Reflet principal en arc sur la lentille (haut-gauche) -->
+    <!-- Primary arc lens reflection (top-left) -->
     <path
         android:fillColor="#FFFFFF"
         android:fillAlpha="0.25"
         android:pathData="M 480,445 A 80,80 0 0,1 565,435 A 100,100 0 0,0 478,450 Z" />
 
-    <!-- Petit point de reflet spéculaire -->
+    <!-- Specular highlight dot -->
     <path
         android:fillColor="#FFFFFF"
         android:fillAlpha="0.5"
         android:pathData="M 495,458 A 8,8 0 1,0 495,474 A 8,8 0 1,0 495,458 Z" />
 
-    <!-- Flare diagonal cinématique (trait de lumière) -->
+    <!-- Cinematic diagonal lens flare -->
     <path
         android:fillColor="#FFFFFF"
         android:fillAlpha="0.07"
         android:pathData="M 320,300 L 345,285 L 760,800 L 735,815 Z" />
 
-    <!-- Second flare plus subtil -->
+    <!-- Secondary subtle lens flare -->
     <path
         android:fillColor="#0A84FF"
         android:fillAlpha="0.05"
         android:pathData="M 340,310 L 355,300 L 745,785 L 730,795 Z" />
 
-    <!-- === INDICATEUR « REC » (point d'enregistrement) === -->
+    <!-- === RECORDING INDICATOR === -->
 
-    <!-- Point REC rouge lumineux (coin supérieur droit) -->
+    <!-- Red recording LED dot (top right) -->
     <path
         android:fillColor="#FF453A"
         android:pathData="M 745,325 A 12,12 0 1,0 745,349 A 12,12 0 1,0 745,325 Z" />
 
-    <!-- Halo du point REC -->
+    <!-- Recording LED halo -->
     <path
         android:fillColor="#FF453A"
         android:fillAlpha="0.2"
