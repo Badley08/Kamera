@@ -9,3 +9,4 @@ local.properties
 .externalNativeBuild
 .cxx
 comparaison_cameras.xlsx
+CHANGELOG_v3.md
