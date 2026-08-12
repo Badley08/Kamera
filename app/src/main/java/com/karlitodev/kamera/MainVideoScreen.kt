@@ -43,7 +43,8 @@ fun MainVideoScreen(
     onPauseRecording: () -> Unit,
     onResumeRecording: () -> Unit,
     onStopRecording: () -> Unit,
-    onSwitchCamera: () -> Unit
+    onSwitchCamera: () -> Unit,
+    onThumbnailClick: () -> Unit
 ) {
     Box(modifier = Modifier.fillMaxSize()) {
         
@@ -141,8 +142,11 @@ fun MainVideoScreen(
                 horizontalArrangement = Arrangement.SpaceBetween,
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                // Bottom-Left: Last video thumbnail preview
-                VideoThumbnailPreview(thumbnail = state.lastVideoThumbnail.value)
+                // Bottom-Left: Last video thumbnail preview (opens gallery on tap)
+                VideoThumbnailPreview(
+                    thumbnail = state.lastVideoThumbnail.value,
+                    onClick = onThumbnailClick
+                )
 
                 // Center: Red Shutter Button with drag zoom gesture
                 RedShutterButton(
@@ -256,15 +260,19 @@ fun RedShutterButton(
     }
 }
 
-// Video thumbnail preview component (Bottom-Left)
+// Video thumbnail preview component (Bottom-Left, opens gallery on tap)
 @Composable
-fun VideoThumbnailPreview(thumbnail: Bitmap?) {
+fun VideoThumbnailPreview(
+    thumbnail: Bitmap?,
+    onClick: () -> Unit
+) {
     Box(
         modifier = Modifier
             .size(48.dp)
             .clip(RoundedCornerShape(8.dp))
             .border(1.5.dp, Color.White.copy(alpha = 0.6f), RoundedCornerShape(8.dp))
-            .background(Color.Black.copy(alpha = 0.6f)),
+            .background(Color.Black.copy(alpha = 0.6f))
+            .clickable(enabled = thumbnail != null) { onClick() },
         contentAlignment = Alignment.Center
     ) {
         if (thumbnail != null) {

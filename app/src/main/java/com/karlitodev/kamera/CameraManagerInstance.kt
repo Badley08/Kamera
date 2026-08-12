@@ -9,6 +9,7 @@ import android.hardware.camera2.params.OutputConfiguration
 import android.hardware.camera2.params.SessionConfiguration
 import android.media.MediaMetadataRetriever
 import android.media.MediaRecorder
+import android.net.Uri
 import android.os.Build
 import android.os.Environment
 import android.os.Handler
@@ -397,7 +398,7 @@ class CameraManagerInstance(
         }
     }
 
-    // Configure MediaRecorder with H.264 encoding for maximum device compatibility
+    // Configure MediaRecorder with H.264 encoding matched to native camera quality
     @Suppress("DEPRECATION")
     private fun setupMediaRecorder(file: File) {
         val recorder = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
@@ -415,33 +416,46 @@ class CameraManagerInstance(
             setVideoEncoder(MediaRecorder.VideoEncoder.H264)
             setAudioEncoder(MediaRecorder.AudioEncoder.AAC)
 
+            // Portrait orientation: 1080x1920 (width x height in portrait)
             val videoSize = getBestVideoSize()
             setVideoSize(videoSize.width, videoSize.height)
             setVideoFrameRate(30)
-            setVideoEncodingBitRate(12_000_000)
+            // 20 Mbps bitrate to match native camera clarity
+            setVideoEncodingBitRate(20_000_000)
+            // Stereo audio at 48 kHz (professional standard matching native app)
+            setAudioChannels(2)
             setAudioEncodingBitRate(128_000)
-            setAudioSamplingRate(44_100)
+            setAudioSamplingRate(48_000)
 
             prepare()
         }
         mediaRecorder = recorder
     }
 
-    // Query the camera for supported video output sizes (prefer 1080p, then 720p)
+    // Query the camera for supported video output sizes in portrait orientation
     private fun getBestVideoSize(): Size {
         try {
             val characteristics = cameraManager.getCameraCharacteristics(currentCameraId)
             val map = characteristics.get(CameraCharacteristics.SCALER_STREAM_CONFIGURATION_MAP)
             val sizes = map?.getOutputSizes(MediaRecorder::class.java)
             if (!sizes.isNullOrEmpty()) {
-                sizes.find { it.width == 1920 && it.height == 1080 }?.let { return it }
-                sizes.find { it.width == 1280 && it.height == 720 }?.let { return it }
+                // Portrait 1080x1920
+                sizes.find { it.width == 1080 && it.height == 1920 }?.let { return it }
+                // Fallback: landscape 1920x1080 (MediaRecorder handles rotation)
+                sizes.find { it.width == 1920 && it.height == 1080 }?.let {
+                    return Size(1080, 1920)
+                }
+                // Portrait 720x1280
+                sizes.find { it.width == 720 && it.height == 1280 }?.let { return it }
+                sizes.find { it.width == 1280 && it.height == 720 }?.let {
+                    return Size(720, 1280)
+                }
                 return sizes[0]
             }
         } catch (e: Exception) {
             Log.e(TAG, "Error querying supported video sizes", e)
         }
-        return Size(1280, 720)
+        return Size(1080, 1920)
     }
 
     private fun createVideoFile(): File {
@@ -476,6 +490,11 @@ class CameraManagerInstance(
                     values.clear()
                     values.put(MediaStore.Video.Media.IS_PENDING, 0)
                     context.contentResolver.update(uri, values, null, null)
+                }
+
+                // Store the content URI for gallery playback
+                mainHandler.post {
+                    state?.lastVideoUri?.value = uri
                 }
             }
         } catch (e: Exception) {

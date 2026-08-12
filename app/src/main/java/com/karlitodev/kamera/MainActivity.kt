@@ -1,6 +1,7 @@
 package com.karlitodev.kamera
 
 import android.Manifest
+import android.content.Intent
 import android.content.pm.PackageManager
 import android.os.Build
 import android.os.Bundle
@@ -72,7 +73,8 @@ class MainActivity : ComponentActivity() {
                             onPauseRecording = { cameraManager.pauseRecording() },
                             onResumeRecording = { cameraManager.resumeRecording() },
                             onStopRecording = { cameraManager.stopRecording() },
-                            onSwitchCamera = { cameraManager.switchCamera() }
+                            onSwitchCamera = { cameraManager.switchCamera() },
+                            onThumbnailClick = { openLastVideo() }
                         )
                     }
                 } else {
@@ -92,6 +94,20 @@ class MainActivity : ComponentActivity() {
             "Press & drag UP on the record button to zoom in, drag DOWN to zoom out (capped at 3.0x).",
             Toast.LENGTH_LONG
         ).show()
+    }
+
+    // Open the last recorded video in the system video player
+    private fun openLastVideo() {
+        val uri = appState.lastVideoUri.value ?: return
+        try {
+            val intent = Intent(Intent.ACTION_VIEW).apply {
+                setDataAndType(uri, "video/mp4")
+                addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
+            }
+            startActivity(intent)
+        } catch (e: Exception) {
+            Toast.makeText(this, "No video player available.", Toast.LENGTH_SHORT).show()
+        }
     }
 
     private fun checkAndRequestPermissions() {
