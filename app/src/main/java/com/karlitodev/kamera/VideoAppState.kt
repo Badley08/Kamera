@@ -1,12 +1,18 @@
 package com.karlitodev.kamera
 
+import android.graphics.Bitmap
 import androidx.compose.runtime.MutableState
+import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 
+// Camera application state container
 data class VideoAppState(
     val hasPermissions: MutableState<Boolean> = mutableStateOf(false),
     val flashEnabled: MutableState<Boolean> = mutableStateOf(false),
-    val currentZoom: MutableState<Float> = mutableStateOf(1.0f), // 1.0f to 3.0f
+    val currentZoom: MutableState<Float> = mutableStateOf(1.0f), // 1.0f to 3.0f range
     val isRecording: MutableState<Boolean> = mutableStateOf(false),
-    val cameraIdToUse: MutableState<String> = mutableStateOf("2")
+    val isPaused: MutableState<Boolean> = mutableStateOf(false),
+    val isFrontCamera: MutableState<Boolean> = mutableStateOf(false),
+    val lastVideoThumbnail: MutableState<Bitmap?> = mutableStateOf(null),
+    val recordingTimeSeconds: MutableState<Int> = mutableIntStateOf(0)
 )

@@ -27,7 +27,7 @@ class MainActivity : ComponentActivity() {
     private lateinit var cameraManager: CameraManagerInstance
     private val appState = VideoAppState()
 
-    // Multiple runtime permissions launcher
+    // Runtime permissions launcher for camera and microphone permissions
     private val requestPermissionsLauncher = registerForActivityResult(
         ActivityResultContracts.RequestMultiplePermissions()
     ) { permissions ->
@@ -36,10 +36,11 @@ class MainActivity : ComponentActivity() {
 
         if (cameraGranted && audioGranted) {
             appState.hasPermissions.value = true
+            showZoomInstructionToast()
         } else {
             Toast.makeText(
                 this,
-                "Camera and microphone permissions are required to use this application.",
+                "Camera and microphone permissions are required to record video.",
                 Toast.LENGTH_LONG
             ).show()
         }
@@ -50,16 +51,17 @@ class MainActivity : ComponentActivity() {
 
         cameraManager = CameraManagerInstance(this, appState)
 
-        // Check required permissions on startup
+        // Check required runtime permissions on activity creation
         checkAndRequestPermissions()
 
         setContent {
             KameraTheme {
                 if (appState.hasPermissions.value) {
-                    // Main camera interface when permissions are granted
+                    // Main camera interface layout
                     Box(modifier = Modifier.fillMaxSize().background(Color.Black)) {
                         Camera2Preview(
                             cameraManager = cameraManager,
+                            isFrontCamera = appState.isFrontCamera.value,
                             modifier = Modifier.fillMaxSize()
                         )
                         MainVideoScreen(
@@ -67,11 +69,14 @@ class MainActivity : ComponentActivity() {
                             onZoomChange = { zoom -> cameraManager.setZoom(zoom) },
                             onFlashToggle = { cameraManager.toggleFlash() },
                             onStartRecording = { cameraManager.startRecording() },
-                            onStopRecording = { cameraManager.stopRecording() }
+                            onPauseRecording = { cameraManager.pauseRecording() },
+                            onResumeRecording = { cameraManager.resumeRecording() },
+                            onStopRecording = { cameraManager.stopRecording() },
+                            onSwitchCamera = { cameraManager.switchCamera() }
                         )
                     }
                 } else {
-                    // Permission rationale screen when permissions are missing
+                    // Permission rationale screen when required permissions are missing
                     PermissionExplanationScreen(
                         onRequestPermissions = { checkAndRequestPermissions() }
                     )
@@ -80,13 +85,22 @@ class MainActivity : ComponentActivity() {
         }
     }
 
+    // Display user guidance toast explaining zoom gesture on launch
+    private fun showZoomInstructionToast() {
+        Toast.makeText(
+            this,
+            "Press & drag UP on the record button to zoom in, drag DOWN to zoom out (capped at 3.0x).",
+            Toast.LENGTH_LONG
+        ).show()
+    }
+
     private fun checkAndRequestPermissions() {
         val permissionsToRequest = mutableListOf(
             Manifest.permission.CAMERA,
             Manifest.permission.RECORD_AUDIO
         )
 
-        // Legacy storage permissions for Android 9 and below (Scoped Storage on Android 10+)
+        // Legacy storage permission for Android 9 and below
         if (Build.VERSION.SDK_INT <= Build.VERSION_CODES.P) {
             permissionsToRequest.add(Manifest.permission.WRITE_EXTERNAL_STORAGE)
         }
@@ -97,9 +111,15 @@ class MainActivity : ComponentActivity() {
 
         if (allGranted) {
             appState.hasPermissions.value = true
+            showZoomInstructionToast()
         } else {
             requestPermissionsLauncher.launch(permissionsToRequest.toTypedArray())
         }
+    }
+
+    override fun onDestroy() {
+        super.onDestroy()
+        cameraManager.release()
     }
 }
 
@@ -114,13 +134,13 @@ fun PermissionExplanationScreen(onRequestPermissions: () -> Unit) {
         verticalArrangement = Arrangement.Center
     ) {
         Text(
-            text = "Autorisations requises",
+            text = "Permissions Required",
             color = Color.White,
             fontSize = 22.sp,
             modifier = Modifier.padding(bottom = 16.dp)
         )
         Text(
-            text = "Kamera a besoin d'accéder à votre appareil photo pour capturer le flux vidéo, au microphone pour enregistrer le son, et au stockage pour sauvegarder vos vidéos sur l'appareil.",
+            text = "Kamera requires camera access to capture video, microphone access to record audio, and storage access to save video files.",
             color = Color.Gray,
             fontSize = 14.sp,
             textAlign = TextAlign.Center,
@@ -130,7 +150,7 @@ fun PermissionExplanationScreen(onRequestPermissions: () -> Unit) {
             onClick = onRequestPermissions,
             colors = ButtonDefaults.buttonColors(containerColor = OnePlusRed)
         ) {
-            Text(text = "Autoriser les accès", color = Color.White)
+            Text(text = "Grant Permissions", color = Color.White)
         }
     }
 }

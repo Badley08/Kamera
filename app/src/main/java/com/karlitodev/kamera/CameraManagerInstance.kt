@@ -1,41 +1,83 @@
 package com.karlitodev.kamera
 
 import android.annotation.SuppressLint
+import android.content.ContentValues
 import android.content.Context
+import android.graphics.Bitmap
 import android.graphics.Rect
 import android.hardware.camera2.*
+import android.hardware.camera2.params.OutputConfiguration
+import android.hardware.camera2.params.SessionConfiguration
+import android.media.MediaMetadataRetriever
 import android.media.MediaRecorder
 import android.os.Build
 import android.os.Environment
+import android.os.Handler
+import android.os.Looper
+import android.provider.MediaStore
+import android.util.Log
+import android.util.Size
 import android.view.Surface
 import java.io.File
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
+import java.util.Timer
+import java.util.TimerTask
+import java.util.concurrent.Executors
 
 class CameraManagerInstance(
     private val context: Context,
     private val state: VideoAppState? = null
 ) {
-
+    private val TAG = "CameraManagerInstance"
     private val cameraManager = context.getSystemService(Context.CAMERA_SERVICE) as CameraManager
     private var cameraDevice: CameraDevice? = null
     private var captureSession: CameraCaptureSession? = null
     private var mediaRecorder: MediaRecorder? = null
 
-    // Target camera ID (camera "2")
-    private val forcedCameraId = "2"
+    private var backCameraId: String = "0"
+    private var frontCameraId: String? = null
+    private var currentCameraId: String = "0"
 
     private var currentZoom = 1.0f
     private var isFlashOn = false
     private var previewSurface: Surface? = null
     private var currentOutputFile: File? = null
 
+    private var timer: Timer? = null
+    private var elapsedSeconds = 0
+    private val mainHandler = Handler(Looper.getMainLooper())
+
+    init {
+        detectCameras()
+    }
+
+    // Detect available back and front camera IDs
+    private fun detectCameras() {
+        try {
+            val cameraIds = cameraManager.cameraIdList
+            for (id in cameraIds) {
+                val characteristics = cameraManager.getCameraCharacteristics(id)
+                val facing = characteristics.get(CameraCharacteristics.LENS_FACING)
+                if (facing == CameraCharacteristics.LENS_FACING_BACK && backCameraId == "0") {
+                    backCameraId = id
+                } else if (facing == CameraCharacteristics.LENS_FACING_FRONT && frontCameraId == null) {
+                    frontCameraId = id
+                }
+            }
+            currentCameraId = backCameraId
+        } catch (e: Exception) {
+            Log.e(TAG, "Error detecting camera IDs", e)
+        }
+    }
+
     @SuppressLint("MissingPermission")
     fun startPreview(surface: Surface) {
         previewSurface = surface
         try {
-            cameraManager.openCamera(forcedCameraId, object : CameraDevice.StateCallback() {
+            stopPreviewInternal()
+            cameraManager.openCamera(currentCameraId, object : CameraDevice.StateCallback() {
                 override fun onOpened(camera: CameraDevice) {
                     cameraDevice = camera
                     createPreviewSession()
@@ -47,12 +89,13 @@ class CameraManagerInstance(
                 }
 
                 override fun onError(camera: CameraDevice, error: Int) {
+                    Log.e(TAG, "Camera error code: $error")
                     camera.close()
                     cameraDevice = null
                 }
             }, null)
         } catch (e: Exception) {
-            e.printStackTrace()
+            Log.e(TAG, "Error starting camera preview", e)
         }
     }
 
@@ -65,21 +108,73 @@ class CameraManagerInstance(
             builder.addTarget(surface)
             applyQualitySettings(builder)
 
-            device.createCaptureSession(
-                listOf(surface),
-                object : CameraCaptureSession.StateCallback() {
-                    override fun onConfigured(session: CameraCaptureSession) {
-                        captureSession = session
-                        session.setRepeatingRequest(builder.build(), null, null)
-                    }
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
+                val outputs = listOf(OutputConfiguration(surface))
+                val config = SessionConfiguration(
+                    SessionConfiguration.SESSION_REGULAR,
+                    outputs,
+                    Executors.newSingleThreadExecutor(),
+                    object : CameraCaptureSession.StateCallback() {
+                        override fun onConfigured(session: CameraCaptureSession) {
+                            captureSession = session
+                            try {
+                                session.setRepeatingRequest(builder.build(), null, null)
+                            } catch (e: Exception) {
+                                Log.e(TAG, "Error setRepeatingRequest", e)
+                            }
+                        }
 
-                    override fun onConfigureFailed(session: CameraCaptureSession) {}
-                },
-                null
-            )
+                        override fun onConfigureFailed(session: CameraCaptureSession) {
+                            Log.e(TAG, "onConfigureFailed")
+                        }
+                    }
+                )
+                device.createCaptureSession(config)
+            } else {
+                @Suppress("DEPRECATION")
+                device.createCaptureSession(
+                    listOf(surface),
+                    object : CameraCaptureSession.StateCallback() {
+                        override fun onConfigured(session: CameraCaptureSession) {
+                            captureSession = session
+                            try {
+                                session.setRepeatingRequest(builder.build(), null, null)
+                            } catch (e: Exception) {
+                                Log.e(TAG, "Error setRepeatingRequest", e)
+                            }
+                        }
+
+                        override fun onConfigureFailed(session: CameraCaptureSession) {}
+                    },
+                    null
+                )
+            }
         } catch (e: Exception) {
-            e.printStackTrace()
+            Log.e(TAG, "Error createPreviewSession", e)
         }
+    }
+
+    // Switch between front and back cameras
+    fun switchCamera() {
+        if (state?.isRecording?.value == true) return
+
+        val targetId = if (currentCameraId == backCameraId && frontCameraId != null) {
+            frontCameraId!!
+        } else {
+            backCameraId
+        }
+
+        currentCameraId = targetId
+        val isFront = (currentCameraId == frontCameraId)
+        state?.isFrontCamera?.value = isFront
+        if (isFront && isFlashOn) {
+            toggleFlash(false)
+        }
+
+        currentZoom = 1.0f
+        state?.currentZoom?.value = 1.0f
+
+        previewSurface?.let { startPreview(it) }
     }
 
     fun startRecording() {
@@ -89,6 +184,7 @@ class CameraManagerInstance(
         try {
             captureSession?.stopRepeating()
             captureSession?.close()
+            captureSession = null
 
             currentOutputFile = createVideoFile()
             setupMediaRecorder(currentOutputFile!!)
@@ -101,45 +197,131 @@ class CameraManagerInstance(
             builder.addTarget(recorderSurface)
             applyQualitySettings(builder)
 
-            device.createCaptureSession(
-                surfaces,
-                object : CameraCaptureSession.StateCallback() {
-                    override fun onConfigured(session: CameraCaptureSession) {
-                        captureSession = session
-                        session.setRepeatingRequest(builder.build(), null, null)
-                        mediaRecorder?.start()
-                        state?.isRecording?.value = true
-                    }
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
+                val outputs = surfaces.map { OutputConfiguration(it) }
+                val config = SessionConfiguration(
+                    SessionConfiguration.SESSION_REGULAR,
+                    outputs,
+                    Executors.newSingleThreadExecutor(),
+                    object : CameraCaptureSession.StateCallback() {
+                        override fun onConfigured(session: CameraCaptureSession) {
+                            captureSession = session
+                            try {
+                                session.setRepeatingRequest(builder.build(), null, null)
+                                mediaRecorder?.start()
+                                mainHandler.post {
+                                    state?.isRecording?.value = true
+                                    state?.isPaused?.value = false
+                                }
+                                startTimer()
+                            } catch (e: Exception) {
+                                Log.e(TAG, "Error starting recorder session", e)
+                            }
+                        }
 
-                    override fun onConfigureFailed(session: CameraCaptureSession) {}
-                },
-                null
-            )
+                        override fun onConfigureFailed(session: CameraCaptureSession) {
+                            Log.e(TAG, "Recording session configuration failed")
+                        }
+                    }
+                )
+                device.createCaptureSession(config)
+            } else {
+                @Suppress("DEPRECATION")
+                device.createCaptureSession(
+                    surfaces,
+                    object : CameraCaptureSession.StateCallback() {
+                        override fun onConfigured(session: CameraCaptureSession) {
+                            captureSession = session
+                            try {
+                                session.setRepeatingRequest(builder.build(), null, null)
+                                mediaRecorder?.start()
+                                mainHandler.post {
+                                    state?.isRecording?.value = true
+                                    state?.isPaused?.value = false
+                                }
+                                startTimer()
+                            } catch (e: Exception) {
+                                Log.e(TAG, "Error starting recorder session", e)
+                            }
+                        }
+
+                        override fun onConfigureFailed(session: CameraCaptureSession) {}
+                    },
+                    null
+                )
+            }
         } catch (e: Exception) {
-            e.printStackTrace()
+            Log.e(TAG, "Error in startRecording", e)
+        }
+    }
+
+    fun pauseRecording() {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
+            try {
+                mediaRecorder?.pause()
+                state?.isPaused?.value = true
+                stopTimer()
+            } catch (e: Exception) {
+                Log.e(TAG, "Error pausing recording", e)
+            }
+        }
+    }
+
+    fun resumeRecording() {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
+            try {
+                mediaRecorder?.resume()
+                state?.isPaused?.value = false
+                startTimer()
+            } catch (e: Exception) {
+                Log.e(TAG, "Error resuming recording", e)
+            }
         }
     }
 
     fun stopRecording() {
         try {
+            stopTimer()
             mediaRecorder?.stop()
             mediaRecorder?.reset()
             mediaRecorder?.release()
             mediaRecorder = null
-            state?.isRecording?.value = false
+
+            mainHandler.post {
+                state?.isRecording?.value = false
+                state?.isPaused?.value = false
+                state?.recordingTimeSeconds?.value = 0
+            }
+
+            currentOutputFile?.let { file ->
+                saveVideoToMediaStore(file)
+                generateThumbnail(file)
+            }
+
             createPreviewSession()
         } catch (e: Exception) {
-            e.printStackTrace()
+            Log.e(TAG, "Error stopping recording", e)
+            mainHandler.post {
+                state?.isRecording?.value = false
+                state?.isPaused?.value = false
+            }
+            createPreviewSession()
         }
     }
 
     fun setZoom(zoom: Float) {
-        currentZoom = zoom
-        state?.currentZoom?.value = zoom
+        currentZoom = zoom.coerceIn(1.0f, 3.0f)
+        state?.currentZoom?.value = currentZoom
         updateRepeatingRequest()
     }
 
     fun toggleFlash(enable: Boolean = !isFlashOn) {
+        if (currentCameraId == frontCameraId) {
+            isFlashOn = false
+            state?.flashEnabled?.value = false
+            return
+        }
+
         isFlashOn = enable
         state?.flashEnabled?.value = enable
         updateRepeatingRequest()
@@ -151,18 +333,21 @@ class CameraManagerInstance(
         val surface = previewSurface ?: return
 
         try {
-            val builder = device.createCaptureRequest(CameraDevice.TEMPLATE_RECORD)
+            val builder = device.createCaptureRequest(
+                if (state?.isRecording?.value == true) CameraDevice.TEMPLATE_RECORD else CameraDevice.TEMPLATE_PREVIEW
+            )
             builder.addTarget(surface)
-            mediaRecorder?.surface?.let { builder.addTarget(it) }
+            if (state?.isRecording?.value == true) {
+                mediaRecorder?.surface?.let { builder.addTarget(it) }
+            }
             applyQualitySettings(builder)
             session.setRepeatingRequest(builder.build(), null, null)
         } catch (e: Exception) {
-            e.printStackTrace()
+            Log.e(TAG, "Error updating repeating request", e)
         }
     }
 
     private fun applyQualitySettings(builder: CaptureRequest.Builder) {
-        // --- ISP quality optimization settings ---
         builder.set(CaptureRequest.NOISE_REDUCTION_MODE, CaptureRequest.NOISE_REDUCTION_MODE_HIGH_QUALITY)
         builder.set(CaptureRequest.EDGE_MODE, CaptureRequest.EDGE_MODE_HIGH_QUALITY)
         builder.set(CaptureRequest.COLOR_CORRECTION_MODE, CaptureRequest.COLOR_CORRECTION_MODE_HIGH_QUALITY)
@@ -170,44 +355,76 @@ class CameraManagerInstance(
         builder.set(CaptureRequest.CONTROL_AF_MODE, CaptureRequest.CONTROL_AF_MODE_CONTINUOUS_VIDEO)
         builder.set(CaptureRequest.CONTROL_AE_MODE, CaptureRequest.CONTROL_AE_MODE_ON)
 
-        // Toggle flashlight mode
-        if (isFlashOn) {
+        if (isFlashOn && currentCameraId == backCameraId) {
             builder.set(CaptureRequest.FLASH_MODE, CaptureRequest.FLASH_MODE_TORCH)
         } else {
             builder.set(CaptureRequest.FLASH_MODE, CaptureRequest.FLASH_MODE_OFF)
         }
 
-        // Digital zoom crop calculation
-        val characteristics = cameraManager.getCameraCharacteristics(forcedCameraId)
-        val arrayRect = characteristics.get(CameraCharacteristics.SENSOR_INFO_ACTIVE_ARRAY_SIZE)
-        if (arrayRect != null) {
-            val cropWidth = (arrayRect.width() / currentZoom).toInt()
-            val cropHeight = (arrayRect.height() / currentZoom).toInt()
-            val left = (arrayRect.width() - cropWidth) / 2
-            val top = (arrayRect.height() - cropHeight) / 2
-            val cropRect = Rect(left, top, left + cropWidth, top + cropHeight)
-            builder.set(CaptureRequest.SCALER_CROP_REGION, cropRect)
+        try {
+            val characteristics = cameraManager.getCameraCharacteristics(currentCameraId)
+            val arrayRect = characteristics.get(CameraCharacteristics.SENSOR_INFO_ACTIVE_ARRAY_SIZE)
+            if (arrayRect != null) {
+                val cropWidth = (arrayRect.width() / currentZoom).toInt()
+                val cropHeight = (arrayRect.height() / currentZoom).toInt()
+                val left = (arrayRect.width() - cropWidth) / 2
+                val top = (arrayRect.height() - cropHeight) / 2
+                val cropRect = Rect(left, top, left + cropWidth, top + cropHeight)
+                builder.set(CaptureRequest.SCALER_CROP_REGION, cropRect)
+            }
+        } catch (e: Exception) {
+            Log.e(TAG, "Error applying crop region", e)
         }
     }
 
+    @Suppress("DEPRECATION")
     private fun setupMediaRecorder(file: File) {
-        mediaRecorder = MediaRecorder().apply {
+        val recorder = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+            MediaRecorder(context)
+        } else {
+            MediaRecorder()
+        }
+
+        // Use H264 for maximum hardware encoder compatibility across devices
+        recorder.apply {
             setAudioSource(MediaRecorder.AudioSource.MIC)
             setVideoSource(MediaRecorder.VideoSource.SURFACE)
             setOutputFormat(MediaRecorder.OutputFormat.MPEG_4)
             setOutputFile(file.absolutePath)
 
-            // 1080p HEVC (H.265) video encoding at 20 Mbps
-            setVideoEncoder(MediaRecorder.VideoEncoder.HEVC)
+            setVideoEncoder(MediaRecorder.VideoEncoder.H264)
             setAudioEncoder(MediaRecorder.AudioEncoder.AAC)
-            setVideoSize(1920, 1080)
+
+            val videoSize = getBestVideoSize()
+            setVideoSize(videoSize.width, videoSize.height)
             setVideoFrameRate(30)
-            setVideoEncodingBitRate(20_000_000)
-            setAudioEncodingBitRate(192_000)
-            setAudioSamplingRate(48_000)
+            setVideoEncodingBitRate(12_000_000)
+            setAudioEncodingBitRate(128_000)
+            setAudioSamplingRate(44_100)
 
             prepare()
         }
+        mediaRecorder = recorder
+    }
+
+    private fun getBestVideoSize(): Size {
+        try {
+            val characteristics = cameraManager.getCameraCharacteristics(currentCameraId)
+            val map = characteristics.get(CameraCharacteristics.SCALER_STREAM_CONFIGURATION_MAP)
+            val sizes = map?.getOutputSizes(MediaRecorder::class.java)
+            if (!sizes.isNullOrEmpty()) {
+                val size1080 = sizes.find { it.width == 1920 && it.height == 1080 }
+                if (size1080 != null) return size1080
+
+                val size720 = sizes.find { it.width == 1280 && it.height == 720 }
+                if (size720 != null) return size720
+
+                return sizes[0]
+            }
+        } catch (e: Exception) {
+            Log.e(TAG, "Error querying supported video sizes", e)
+        }
+        return Size(1280, 720)
     }
 
     private fun createVideoFile(): File {
@@ -216,15 +433,73 @@ class CameraManagerInstance(
         return File.createTempFile("VID_${timestamp}_", ".mp4", storageDir)
     }
 
+    private fun saveVideoToMediaStore(file: File) {
+        try {
+            val values = ContentValues().apply {
+                put(MediaStore.Video.Media.DISPLAY_NAME, file.name)
+                put(MediaStore.Video.Media.MIME_TYPE, "video/mp4")
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+                    put(MediaStore.Video.Media.RELATIVE_PATH, Environment.DIRECTORY_MOVIES + "/Kamera")
+                }
+            }
+            context.contentResolver.insert(MediaStore.Video.Media.EXTERNAL_CONTENT_URI, values)
+        } catch (e: Exception) {
+            Log.e(TAG, "Error saving video to MediaStore", e)
+        }
+    }
+
+    private fun generateThumbnail(file: File) {
+        try {
+            val retriever = MediaMetadataRetriever()
+            retriever.setDataSource(file.absolutePath)
+            val bitmap = retriever.getFrameAtTime(0, MediaMetadataRetriever.OPTION_CLOSEST_SYNC)
+            retriever.release()
+
+            mainHandler.post {
+                state?.lastVideoThumbnail?.value = bitmap
+            }
+        } catch (e: Exception) {
+            Log.e(TAG, "Error generating video thumbnail", e)
+        }
+    }
+
+    private fun startTimer() {
+        stopTimer()
+        elapsedSeconds = 0
+        timer = Timer()
+        timer?.scheduleAtFixedRate(object : TimerTask() {
+            override fun run() {
+                elapsedSeconds++
+                mainHandler.post {
+                    state?.recordingTimeSeconds?.value = elapsedSeconds
+                }
+            }
+        }, 1000, 1000)
+    }
+
+    private fun stopTimer() {
+        timer?.cancel()
+        timer = null
+    }
+
+    private fun stopPreviewInternal() {
+        try {
+            captureSession?.close()
+            captureSession = null
+            cameraDevice?.close()
+            cameraDevice = null
+        } catch (e: Exception) {
+            Log.e(TAG, "Error closing camera preview internal", e)
+        }
+    }
+
     fun stopPreview() {
-        captureSession?.close()
-        captureSession = null
-        cameraDevice?.close()
-        cameraDevice = null
+        stopPreviewInternal()
     }
 
     fun release() {
-        stopPreview()
+        stopTimer()
+        stopPreviewInternal()
         mediaRecorder?.release()
         mediaRecorder = null
     }
