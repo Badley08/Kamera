@@ -11,3 +11,4 @@ local.properties
 *.xlsx
 CHANGELOG_*.md
 ROADMAP_*.md
+GUIDE_*.md

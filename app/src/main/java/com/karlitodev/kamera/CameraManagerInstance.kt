@@ -458,6 +458,20 @@ class CameraManagerInstance(
         builder.set(CaptureRequest.CONTROL_AF_MODE, CaptureRequest.CONTROL_AF_MODE_CONTINUOUS_VIDEO)
         builder.set(CaptureRequest.CONTROL_AE_MODE, CaptureRequest.CONTROL_AE_MODE_ON)
 
+        // 1. Lock sensor AE Target FPS Range to 30 FPS (prevents frame drop in low light)
+        try {
+            val characteristics = cameraManager.getCameraCharacteristics(currentCameraId)
+            val fpsRanges = characteristics.get(CameraCharacteristics.CONTROL_AE_AVAILABLE_TARGET_FPS_RANGES)
+            if (!fpsRanges.isNullOrEmpty()) {
+                val targetRange = fpsRanges.find { it.lower == 30 && it.upper == 30 }
+                    ?: fpsRanges.find { it.upper == 30 }
+                    ?: fpsRanges[0]
+                builder.set(CaptureRequest.CONTROL_AE_TARGET_FPS_RANGE, targetRange)
+            }
+        } catch (e: Exception) {
+            Log.e(TAG, "Error setting AE target FPS range", e)
+        }
+
         if (isFlashOn && currentCameraId != frontCameraId) {
             builder.set(CaptureRequest.FLASH_MODE, CaptureRequest.FLASH_MODE_TORCH)
         } else {
@@ -498,16 +512,18 @@ class CameraManagerInstance(
             setAudioEncoder(MediaRecorder.AudioEncoder.AAC)
 
             // Standard landscape sensor dimensions (1920x1080) with orientation hint set to 90
-            // This preserves hardware 30 FPS encoding performance while producing 9:16 portrait video!
             val videoSize = getBestVideoSize()
             setVideoSize(videoSize.width, videoSize.height)
 
-            // Set 90 degrees orientation hint for portrait video container
+            // Orientation hint for 9:16 portrait playback
             val orientationHint = if (currentCameraId == frontCameraId) 270 else 90
             setOrientationHint(orientationHint)
 
+            // Locked 30 FPS framerate and 22 Mbps bitrate as recommended in optimization guide
             setVideoFrameRate(30)
-            setVideoEncodingBitRate(20_000_000)
+            setVideoEncodingBitRate(22_000_000)
+
+            // Stereo audio at 48.0 kHz
             setAudioChannels(2)
             setAudioEncodingBitRate(128_000)
             setAudioSamplingRate(48_000)
