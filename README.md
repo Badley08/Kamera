@@ -1,6 +1,7 @@
 # Kamera
 
 <p align="center">
+  <img src="https://img.shields.io/badge/Version-2.0-red.svg" alt="Version 2.0" />
   <img src="https://img.shields.io/badge/License-GPL--3.0-blue.svg" alt="GPLv3 License" />
   <img src="https://img.shields.io/badge/Platform-Android-green.svg" alt="Android Platform" />
   <img src="https://img.shields.io/badge/Language-Kotlin-purple.svg" alt="Kotlin" />
@@ -12,12 +13,26 @@ Developed by **Luberisse Karl**.
 
 ---
 
-## Features & Purpose
+## Features
 
 - **Effortless High-Quality Video**: Designed specifically for video recording without the hassle of tweaking complex manual parameters.
-- **Smart Camera & ISP Tuning**: Automatic high-quality ISP configuration (Spectra optimization, continuous autofocus, noise reduction, high bitrate HEVC/H.265 1080p recording).
-- **Smooth Zoom & Flash Controls**: Simple arc gesture controls for digital zoom (1.0x to 3.0x) and quick flashlight toggle.
-- **Modern Clean UI**: Built with Jetpack Compose featuring a dark, sleek camera interface.
+- **Smart Camera & ISP Tuning**: Automatic high-quality ISP configuration (continuous autofocus, noise reduction, edge enhancement, color correction, H.264 encoding at 12 Mbps).
+- **Front / Back Camera Switching**: Tap the switch button to toggle between rear and front cameras.
+- **Pause & Resume Recording**: Pause the current recording and resume seamlessly without creating a new file.
+- **Drag-to-Zoom**: Press and drag up on the record button to zoom in, drag down to zoom out (capped at 3.0x for performance stability).
+- **Flash / Torch Toggle**: Quick toggle for the rear camera flashlight during preview or recording.
+- **Video Thumbnail Preview**: The last recorded video frame is displayed as a thumbnail in the bottom-left corner.
+- **Modern Clean UI**: Built with Jetpack Compose featuring a dark, sleek camera interface inspired by OnePlus camera design.
+
+---
+
+## Usage
+
+On first launch, the app displays a guidance message:
+
+> Press & drag UP on the record button to zoom in, drag DOWN to zoom out (capped at 3.0x).
+
+Recorded videos are saved to the device gallery under the **Movies/Kamera** folder.
 
 ---
 
