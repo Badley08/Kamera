@@ -8,5 +8,6 @@ local.properties
 /captures
 .externalNativeBuild
 .cxx
-comparaison_cameras.xlsx
-CHANGELOG_v3.md
+*.xlsx
+CHANGELOG_*.md
+ROADMAP_*.md

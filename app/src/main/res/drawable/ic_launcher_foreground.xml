@@ -4,158 +4,72 @@
     android:viewportWidth="1080"
     android:viewportHeight="1080">
 
-    <!-- === LENS EXTERIOR BODY === -->
-
-    <!-- Soft drop shadow under the lens -->
+    <!-- Lens body background shadow -->
     <path
         android:fillColor="#000000"
-        android:fillAlpha="0.15"
-        android:pathData="M 540,255 A 295,295 0 1,0 540,845 A 295,295 0 1,0 540,255 Z" />
+        android:fillAlpha="0.4"
+        android:pathData="M 540,240 A 300,300 0 1,0 540,840 A 300,300 0 1,0 540,240 Z" />
 
-    <!-- Outer ring – dark brushed metal -->
+    <!-- Outer metallic ring -->
     <path
-        android:fillColor="#3A3A3C"
+        android:fillColor="#222224"
         android:pathData="M 540,250 A 290,290 0 1,0 540,830 A 290,290 0 1,0 540,250 Z" />
 
-    <!-- Outer light bevel (top highlight) -->
+    <!-- Polished chrome bevel -->
     <path
-        android:fillColor="#FFFFFF"
-        android:fillAlpha="0.12"
-        android:pathData="M 540,250 A 290,290 0 0,1 830,540 A 286,286 0 0,0 540,254 Z" />
+        android:fillColor="#F00000"
+        android:pathData="M 540,270 A 270,270 0 1,0 540,810 A 270,270 0 1,0 540,270 Z" />
 
-    <!-- Intermediate ring – textured grip ring -->
+    <!-- Inner dark lens barrel -->
     <path
-        android:fillColor="#2C2C2E"
-        android:pathData="M 540,275 A 265,265 0 1,0 540,805 A 265,265 0 1,0 540,275 Z" />
+        android:fillColor="#111113"
+        android:pathData="M 540,290 A 250,250 0 1,0 540,790 A 250,250 0 1,0 540,290 Z" />
 
-    <!-- Grip markings (8 notches) -->
-    <path
-        android:fillColor="#48484A"
-        android:pathData="M 536,252 h 8 v 28 h -8 z
-                          M 536,800 h 8 v 28 h -8 z
-                          M 252,536 h 28 v 8 h -28 z
-                          M 800,536 h 28 v 8 h -28 z
-                          M 355,289 l 6,4 v 24 l -6,-4 z
-                          M 719,763 l 6,4 v 24 l -6,-4 z
-                          M 289,719 l 4,-6 h 24 l -4,6 z
-                          M 763,355 l 4,-6 h 24 l -4,6 z" />
-
-    <!-- Focus ring – polished metallic ring -->
-    <path
-        android:fillColor="#48484A"
-        android:pathData="M 540,295 A 245,245 0 1,0 540,785 A 245,245 0 1,0 540,295 Z M 540,310 A 230,230 0 1,1 540,770 A 230,230 0 1,1 540,310 Z" />
-
-    <!-- Focus ring reflection -->
-    <path
-        android:fillColor="#FFFFFF"
-        android:fillAlpha="0.08"
-        android:pathData="M 540,295 A 245,245 0 0,1 785,540 A 241,241 0 0,0 540,299 Z" />
-
-    <!-- === INNER OPTICAL ZONE === -->
-
-    <!-- Optical chamber dark background -->
+    <!-- Aperture blade ring -->
     <path
         android:fillColor="#1C1C1E"
-        android:pathData="M 540,310 A 230,230 0 1,0 540,770 A 230,230 0 1,0 540,310 Z" />
+        android:pathData="M 540,340 A 200,200 0 1,0 540,740 A 200,200 0 1,0 540,340 Z" />
 
-    <!-- === HEXAGONAL APERTURE (6 blades) === -->
-
-    <!-- Aperture blade 1 -->
+    <!-- Hexagonal aperture blades -->
     <path
-        android:fillColor="#2C2C2E"
-        android:pathData="M 540,350 L 705,445 L 705,635 L 540,730 L 375,635 L 375,445 Z
-                          M 540,390 L 670,465 L 670,615 L 540,690 L 410,615 L 410,465 Z" />
+        android:fillColor="#2A2A2D"
+        android:pathData="M 540,370 L 687,455 L 687,625 L 540,710 L 393,625 L 393,455 Z
+                          M 540,410 L 652,475 L 652,605 L 540,670 L 428,605 L 428,475 Z" />
 
-    <!-- Inter-blade reflections -->
-    <path
-        android:fillColor="#FFFFFF"
-        android:fillAlpha="0.06"
-        android:pathData="M 540,350 L 705,445 L 670,465 L 540,390 Z" />
-    <path
-        android:fillColor="#FFFFFF"
-        android:fillAlpha="0.04"
-        android:pathData="M 705,445 L 705,635 L 670,615 L 670,465 Z" />
-
-    <!-- === LENS SYSTEM === -->
-
-    <!-- Outer lens – dark cyan ring (anti-reflective coating) -->
+    <!-- Glass optic coating ring -->
     <path
         android:fillColor="#0A84FF"
-        android:fillAlpha="0.15"
-        android:pathData="M 540,400 A 140,140 0 1,0 540,680 A 140,140 0 1,0 540,400 Z M 540,420 A 120,120 0 1,1 540,660 A 120,120 0 1,1 540,420 Z" />
+        android:fillAlpha="0.3"
+        android:pathData="M 540,430 A 110,110 0 1,0 540,650 A 110,110 0 1,0 540,430 Z" />
 
-    <!-- Main lens – deep blue glass -->
+    <!-- Deep optical glass center -->
     <path
-        android:fillColor="#0A1A2F"
-        android:pathData="M 540,420 A 120,120 0 1,0 540,660 A 120,120 0 1,0 540,420 Z" />
+        android:fillColor="#091424"
+        android:pathData="M 540,450 A 90,90 0 1,0 540,630 A 90,90 0 1,0 540,450 Z" />
 
-    <!-- Inner lens gradient – intermediate layer -->
+    <!-- Signature OnePlus Red central lens sensor -->
     <path
-        android:fillColor="#1A2A4A"
-        android:fillAlpha="0.7"
-        android:pathData="M 540,435 A 105,105 0 1,0 540,645 A 105,105 0 1,0 540,435 Z" />
-
-    <!-- === CENTRAL SENSOR ACCENT === -->
-
-    <!-- Sensor halo -->
-    <path
-        android:fillColor="#FF453A"
-        android:fillAlpha="0.25"
-        android:pathData="M 540,465 A 75,75 0 1,0 540,615 A 75,75 0 1,0 540,465 Z" />
-
-    <!-- Main sensor – cinematic red -->
-    <path
-        android:fillColor="#FF453A"
+        android:fillColor="#F00000"
         android:pathData="M 540,480 A 60,60 0 1,0 540,600 A 60,60 0 1,0 540,480 Z" />
 
-    <!-- Inner sensor – warm orange -->
+    <!-- Inner sensor core hotspot -->
     <path
-        android:fillColor="#FF6B3D"
-        android:pathData="M 540,500 A 40,40 0 1,0 540,580 A 40,40 0 1,0 540,500 Z" />
+        android:fillColor="#FF5252"
+        android:pathData="M 540,505 A 35,35 0 1,0 540,575 A 35,35 0 1,0 540,505 Z" />
 
-    <!-- Central hotspot – bright center -->
-    <path
-        android:fillColor="#FF9F0A"
-        android:fillAlpha="0.8"
-        android:pathData="M 540,520 A 20,20 0 1,0 540,560 A 20,20 0 1,0 540,520 Z" />
-
-    <!-- === REFLECTIONS AND FLARES === -->
-
-    <!-- Primary arc lens reflection (top-left) -->
     <path
         android:fillColor="#FFFFFF"
-        android:fillAlpha="0.25"
-        android:pathData="M 480,445 A 80,80 0 0,1 565,435 A 100,100 0 0,0 478,450 Z" />
+        android:pathData="M 540,525 A 15,15 0 1,0 540,555 A 15,15 0 1,0 540,525 Z" />
 
-    <!-- Specular highlight dot -->
+    <!-- Lens glass reflections -->
     <path
         android:fillColor="#FFFFFF"
-        android:fillAlpha="0.5"
-        android:pathData="M 495,458 A 8,8 0 1,0 495,474 A 8,8 0 1,0 495,458 Z" />
+        android:fillAlpha="0.35"
+        android:pathData="M 470,440 A 70,70 0 0,1 550,430 A 85,85 0 0,0 465,448 Z" />
 
-    <!-- Cinematic diagonal lens flare -->
     <path
         android:fillColor="#FFFFFF"
-        android:fillAlpha="0.07"
-        android:pathData="M 320,300 L 345,285 L 760,800 L 735,815 Z" />
-
-    <!-- Secondary subtle lens flare -->
-    <path
-        android:fillColor="#0A84FF"
-        android:fillAlpha="0.05"
-        android:pathData="M 340,310 L 355,300 L 745,785 L 730,795 Z" />
-
-    <!-- === RECORDING INDICATOR === -->
-
-    <!-- Red recording LED dot (top right) -->
-    <path
-        android:fillColor="#FF453A"
-        android:pathData="M 745,325 A 12,12 0 1,0 745,349 A 12,12 0 1,0 745,325 Z" />
-
-    <!-- Recording LED halo -->
-    <path
-        android:fillColor="#FF453A"
-        android:fillAlpha="0.2"
-        android:pathData="M 745,320 A 17,17 0 1,0 745,354 A 17,17 0 1,0 745,320 Z" />
+        android:fillAlpha="0.6"
+        android:pathData="M 485,455 A 7,7 0 1,0 485,469 A 7,7 0 1,0 485,455 Z" />
 
 </vector>

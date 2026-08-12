@@ -4,7 +4,6 @@ import android.graphics.Bitmap
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
-import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -20,12 +19,8 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.geometry.Offset
-import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.graphics.asImageBitmap
-import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
@@ -43,16 +38,18 @@ fun MainVideoScreen(
     onPauseRecording: () -> Unit,
     onResumeRecording: () -> Unit,
     onStopRecording: () -> Unit,
+    onTakePhoto: () -> Unit,
     onSwitchCamera: () -> Unit,
     onThumbnailClick: () -> Unit
 ) {
     Box(modifier = Modifier.fillMaxSize()) {
-        
+
         // 1. Top bar: Flash toggle (left) and Recording timer (center)
         Row(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(top = 48.dp, start = 24.dp, end = 24.dp),
+                .statusBarsPadding()
+                .padding(top = 16.dp, start = 24.dp, end = 24.dp),
             horizontalArrangement = Arrangement.SpaceBetween,
             verticalAlignment = Alignment.CenterVertically
         ) {
@@ -74,11 +71,11 @@ fun MainVideoScreen(
             if (state.isRecording.value) {
                 val seconds = state.recordingTimeSeconds.value
                 val formattedTime = String.format(Locale.getDefault(), "%02d:%02d", seconds / 60, seconds % 60)
-                
+
                 Box(
                     modifier = Modifier
                         .clip(RoundedCornerShape(16.dp))
-                        .background(Color.Red.copy(alpha = 0.8f))
+                        .background(Color.Red.copy(alpha = 0.85f))
                         .padding(horizontal = 16.dp, vertical = 6.dp)
                 ) {
                     Text(
@@ -91,21 +88,34 @@ fun MainVideoScreen(
             } else {
                 Spacer(modifier = Modifier.size(48.dp))
             }
-            
+
             Spacer(modifier = Modifier.size(48.dp))
         }
 
-        // 2. Bottom controls container (OnePlus camera style)
+        // 2. Bottom controls container (Minimalist OnePlus style)
         Column(
             modifier = Modifier
                 .align(Alignment.BottomCenter)
-                .padding(bottom = 36.dp),
+                .navigationBarsPadding()
+                .padding(bottom = 28.dp),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
-            // Zoom arc indicator
-            ZoomArc(currentZoom = state.currentZoom.value)
-            
-            Spacer(modifier = Modifier.height(16.dp))
+            // Sleek minimalist zoom pill selector (1.0x / 2.0x / 3.0x)
+            ZoomPillSelector(
+                currentZoom = state.currentZoom.value,
+                onZoomSelect = { zoom -> onZoomChange(zoom) }
+            )
+
+            Spacer(modifier = Modifier.height(14.dp))
+
+            // Discrete Camera Mode Switcher (VIDEO / PHOTO)
+            if (!state.isRecording.value) {
+                CameraModeSwitcher(
+                    currentMode = state.cameraMode.value,
+                    onModeSelect = { mode -> state.cameraMode.value = mode }
+                )
+                Spacer(modifier = Modifier.height(14.dp))
+            }
 
             // Pause / Resume toggle button (appears above shutter during active recording)
             AnimatedVisibility(
@@ -134,29 +144,34 @@ fun MainVideoScreen(
                 }
             }
 
-            // Bottom controls row: Thumbnail (left), Red Shutter (center), Camera Switch (right)
+            // Bottom controls row: Gallery Thumbnail (left), Shutter (center), Camera Switch (right)
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(horizontal = 32.dp),
+                    .padding(horizontal = 36.dp),
                 horizontalArrangement = Arrangement.SpaceBetween,
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                // Bottom-Left: Last video thumbnail preview (opens gallery on tap)
+                // Bottom-Left: Last media thumbnail preview (opens gallery on tap)
                 VideoThumbnailPreview(
                     thumbnail = state.lastVideoThumbnail.value,
                     onClick = onThumbnailClick
                 )
 
-                // Center: Red Shutter Button with drag zoom gesture
-                RedShutterButton(
+                // Center: Shutter Button (supports drag up/down for zoom in both Video and Photo modes)
+                ShutterButton(
+                    mode = state.cameraMode.value,
                     isRecording = state.isRecording.value,
                     onZoomRequested = { delta ->
                         val newZoom = (state.currentZoom.value + delta).coerceIn(1.0f, 3.0f)
                         onZoomChange(newZoom)
                     },
                     onClick = {
-                        if (state.isRecording.value) onStopRecording() else onStartRecording()
+                        if (state.cameraMode.value == CameraMode.VIDEO) {
+                            if (state.isRecording.value) onStopRecording() else onStartRecording()
+                        } else {
+                            onTakePhoto()
+                        }
                     }
                 )
 
@@ -165,9 +180,10 @@ fun MainVideoScreen(
                     onClick = onSwitchCamera,
                     enabled = !state.isRecording.value,
                     modifier = Modifier
-                        .size(48.dp)
+                        .size(50.dp)
                         .clip(CircleShape)
                         .background(Color.Black.copy(alpha = 0.5f))
+                        .border(1.dp, Color.White.copy(alpha = 0.3f), CircleShape)
                 ) {
                     Icon(
                         painter = painterResource(id = R.drawable.ic_camera_switch),
@@ -180,87 +196,113 @@ fun MainVideoScreen(
     }
 }
 
-// Zoom arc component (OnePlus camera style arc)
+// Minimalist zoom pill selector with quick tap presets (1.0x, 2.0x, 3.0x)
 @Composable
-fun ZoomArc(currentZoom: Float) {
-    Box(contentAlignment = Alignment.Center, modifier = Modifier.height(50.dp).fillMaxWidth()) {
-        Canvas(modifier = Modifier.size(180.dp, 90.dp)) {
-            val center = Offset(size.width / 2, size.height)
-            val radius = 80.dp.toPx()
-            
-            // Normalized progress across 1.0x to 3.0x zoom range
-            val progress = (currentZoom - 1f) / 2f
-            
-            // Background translucent arc
-            drawArc(
-                color = Color.White.copy(alpha = 0.25f),
-                startAngle = 180f,
-                sweepAngle = 180f,
-                useCenter = false,
-                topLeft = Offset(center.x - radius, center.y - radius),
-                size = Size(radius * 2, radius * 2),
-                style = Stroke(width = 2.dp.toPx(), cap = StrokeCap.Round)
-            )
-
-            // Active zoom progress arc
-            drawArc(
-                color = Color.White,
-                startAngle = 180f,
-                sweepAngle = 180f * progress,
-                useCenter = false,
-                topLeft = Offset(center.x - radius, center.y - radius),
-                size = Size(radius * 2, radius * 2),
-                style = Stroke(width = 3.dp.toPx(), cap = StrokeCap.Round)
-            )
+fun ZoomPillSelector(
+    currentZoom: Float,
+    onZoomSelect: (Float) -> Unit
+) {
+    Row(
+        modifier = Modifier
+            .clip(RoundedCornerShape(20.dp))
+            .background(Color.Black.copy(alpha = 0.5f))
+            .border(1.dp, Color.White.copy(alpha = 0.2f), RoundedCornerShape(20.dp))
+            .padding(horizontal = 6.dp, vertical = 4.dp),
+        horizontalArrangement = Arrangement.spacedBy(4.dp),
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        listOf(1.0f, 2.0f, 3.0f).forEach { zoomLevel ->
+            val isSelected = Math.abs(currentZoom - zoomLevel) < 0.3f
+            Box(
+                modifier = Modifier
+                    .clip(CircleShape)
+                    .background(if (isSelected) OnePlusRed else Color.Transparent)
+                    .clickable { onZoomSelect(zoomLevel) }
+                    .padding(horizontal = 12.dp, vertical = 4.dp),
+                contentAlignment = Alignment.Center
+            ) {
+                Text(
+                    text = String.format(Locale.getDefault(), "%.0fx", zoomLevel),
+                    color = Color.White,
+                    fontSize = 12.sp,
+                    fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Medium
+                )
+            }
         }
-        
-        // Digital zoom factor display
-        Text(
-            text = String.format(Locale.getDefault(), "%.1fx", currentZoom),
-            color = Color.White,
-            fontSize = 16.sp,
-            fontWeight = FontWeight.Bold,
-            modifier = Modifier.padding(bottom = 6.dp)
-        )
     }
 }
 
-// Red Shutter Button (OnePlus Red signature color)
+// Discrete Camera Mode Switcher (VIDEO / PHOTO)
 @Composable
-fun RedShutterButton(
+fun CameraModeSwitcher(
+    currentMode: CameraMode,
+    onModeSelect: (CameraMode) -> Unit
+) {
+    Row(
+        horizontalArrangement = Arrangement.spacedBy(24.dp),
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        CameraMode.values().forEach { mode ->
+            val isSelected = (mode == currentMode)
+            Text(
+                text = mode.name,
+                color = if (isSelected) Color.White else Color.Gray,
+                fontSize = 13.sp,
+                fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Normal,
+                letterSpacing = 1.sp,
+                modifier = Modifier
+                    .clickable { onModeSelect(mode) }
+                    .padding(vertical = 4.dp)
+            )
+        }
+    }
+}
+
+// Shutter Button with refined thin border and drag-to-zoom support
+@Composable
+fun ShutterButton(
+    mode: CameraMode,
     isRecording: Boolean,
     onZoomRequested: (Float) -> Unit,
     onClick: () -> Unit
 ) {
     Box(
         modifier = Modifier
-            .size(80.dp)
+            .size(76.dp)
             .pointerInput(Unit) {
                 detectVerticalDragGestures { _, dragAmount ->
-                    // Vertical drag gesture: drag up to zoom in, drag down to zoom out
+                    // Drag up to zoom in, drag down to zoom out (works in both video and photo modes)
                     val sensitivity = -0.008f
                     onZoomRequested(dragAmount * sensitivity)
                 }
             }
-            .border(4.dp, Color.White, CircleShape)
-            .padding(6.dp)
+            .border(2.5.dp, Color.White, CircleShape)
+            .padding(5.dp)
             .clip(CircleShape)
-            .background(OnePlusRed)
+            .background(if (mode == CameraMode.VIDEO) OnePlusRed else Color.White)
             .clickable { onClick() },
         contentAlignment = Alignment.Center
     ) {
-        if (isRecording) {
-            // White stop recording icon inside red button when recording
+        if (mode == CameraMode.VIDEO && isRecording) {
+            // White stop recording square inside red button when recording
             Box(
                 modifier = Modifier
-                    .size(26.dp)
+                    .size(24.dp)
                     .background(Color.White, RoundedCornerShape(4.dp))
+            )
+        } else if (mode == CameraMode.PHOTO) {
+            // Inner Red ring for photo shutter
+            Box(
+                modifier = Modifier
+                    .size(60.dp)
+                    .clip(CircleShape)
+                    .background(OnePlusRed.copy(alpha = 0.15f))
             )
         }
     }
 }
 
-// Video thumbnail preview component (Bottom-Left, opens gallery on tap)
+// Video/Photo thumbnail preview component (Bottom-Left)
 @Composable
 fun VideoThumbnailPreview(
     thumbnail: Bitmap?,
@@ -268,9 +310,9 @@ fun VideoThumbnailPreview(
 ) {
     Box(
         modifier = Modifier
-            .size(48.dp)
-            .clip(RoundedCornerShape(8.dp))
-            .border(1.5.dp, Color.White.copy(alpha = 0.6f), RoundedCornerShape(8.dp))
+            .size(50.dp)
+            .clip(RoundedCornerShape(10.dp))
+            .border(1.5.dp, Color.White.copy(alpha = 0.6f), RoundedCornerShape(10.dp))
             .background(Color.Black.copy(alpha = 0.6f))
             .clickable(enabled = thumbnail != null) { onClick() },
         contentAlignment = Alignment.Center
@@ -278,7 +320,7 @@ fun VideoThumbnailPreview(
         if (thumbnail != null) {
             Image(
                 bitmap = thumbnail.asImageBitmap(),
-                contentDescription = "Last Recorded Video Preview",
+                contentDescription = "Last Media Preview",
                 contentScale = ContentScale.Crop,
                 modifier = Modifier.fillMaxSize()
             )
