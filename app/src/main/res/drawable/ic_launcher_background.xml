@@ -1,0 +1,119 @@
+<?xml version="1.0" encoding="utf-8"?>
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="108dp"
+    android:height="108dp"
+    android:viewportWidth="1080"
+    android:viewportHeight="1080">
+
+    <!-- Fond principal – noir profond premium -->
+    <path
+        android:fillColor="#0D0D0F"
+        android:pathData="M0,0h1080v1080h-1080z" />
+
+    <!-- Dégradé radial simulé – halo central subtil -->
+    <path
+        android:fillColor="#1A1A2E"
+        android:fillAlpha="0.6"
+        android:pathData="M 540,340 A 300,300 0 1,0 540,940 A 300,300 0 1,0 540,340 Z" />
+
+    <path
+        android:fillColor="#16213E"
+        android:fillAlpha="0.4"
+        android:pathData="M 540,390 A 250,250 0 1,0 540,890 A 250,250 0 1,0 540,390 Z" />
+
+    <path
+        android:fillColor="#1A1A2E"
+        android:fillAlpha="0.25"
+        android:pathData="M 540,440 A 200,200 0 1,0 540,840 A 200,200 0 1,0 540,440 Z" />
+
+    <!-- Grille technique subtile (style ingénierie optique) -->
+
+    <!-- Lignes verticales -->
+    <path
+        android:fillColor="#00000000"
+        android:pathData="M 270,0 L 270,1080"
+        android:strokeWidth="0.5"
+        android:strokeColor="#FFFFFF"
+        android:strokeAlpha="0.04" />
+    <path
+        android:fillColor="#00000000"
+        android:pathData="M 540,0 L 540,1080"
+        android:strokeWidth="0.5"
+        android:strokeColor="#FFFFFF"
+        android:strokeAlpha="0.04" />
+    <path
+        android:fillColor="#00000000"
+        android:pathData="M 810,0 L 810,1080"
+        android:strokeWidth="0.5"
+        android:strokeColor="#FFFFFF"
+        android:strokeAlpha="0.04" />
+
+    <!-- Lignes horizontales -->
+    <path
+        android:fillColor="#00000000"
+        android:pathData="M 0,270 L 1080,270"
+        android:strokeWidth="0.5"
+        android:strokeColor="#FFFFFF"
+        android:strokeAlpha="0.04" />
+    <path
+        android:fillColor="#00000000"
+        android:pathData="M 0,540 L 1080,540"
+        android:strokeWidth="0.5"
+        android:strokeColor="#FFFFFF"
+        android:strokeAlpha="0.04" />
+    <path
+        android:fillColor="#00000000"
+        android:pathData="M 0,810 L 1080,810"
+        android:strokeWidth="0.5"
+        android:strokeColor="#FFFFFF"
+        android:strokeAlpha="0.04" />
+
+    <!-- Cercle de repère optique (finder ring) -->
+    <path
+        android:fillColor="#00000000"
+        android:pathData="M 540,190 A 350,350 0 1,0 540,890 A 350,350 0 1,0 540,190 Z"
+        android:strokeWidth="0.6"
+        android:strokeColor="#FFFFFF"
+        android:strokeAlpha="0.035" />
+
+    <!-- Coins techniques (marques de cadrage) -->
+
+    <!-- Coin supérieur gauche -->
+    <path
+        android:fillColor="#00000000"
+        android:pathData="M 180,230 L 180,180 L 230,180"
+        android:strokeWidth="1.2"
+        android:strokeColor="#FFFFFF"
+        android:strokeAlpha="0.06" />
+
+    <!-- Coin supérieur droit -->
+    <path
+        android:fillColor="#00000000"
+        android:pathData="M 850,180 L 900,180 L 900,230"
+        android:strokeWidth="1.2"
+        android:strokeColor="#FFFFFF"
+        android:strokeAlpha="0.06" />
+
+    <!-- Coin inférieur gauche -->
+    <path
+        android:fillColor="#00000000"
+        android:pathData="M 180,850 L 180,900 L 230,900"
+        android:strokeWidth="1.2"
+        android:strokeColor="#FFFFFF"
+        android:strokeAlpha="0.06" />
+
+    <!-- Coin inférieur droit -->
+    <path
+        android:fillColor="#00000000"
+        android:pathData="M 900,850 L 900,900 L 850,900"
+        android:strokeWidth="1.2"
+        android:strokeColor="#FFFFFF"
+        android:strokeAlpha="0.06" />
+
+    <!-- Points de calibration discrets -->
+    <path
+        android:fillColor="#FF453A"
+        android:fillAlpha="0.08"
+        android:pathData="M 537,537 A 3,3 0 1,0 537,543 A 3,3 0 1,0 537,537 Z" />
+
+</vector>
