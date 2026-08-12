@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <style name="Theme.Kamera" parent="Theme.Material3.DayNight.NoActionBar">
+    <style name="Theme.Kamera" parent="android:Theme.Material.NoActionBar">
         <!-- Fullscreen configuration and dark background -->
         <item name="android:statusBarColor">@color/statusBarColor</item>
         <item name="android:navigationBarColor">@color/navigationBarColor</item>
