@@ -9,6 +9,6 @@ local.properties
 .externalNativeBuild
 .cxx
 *.xlsx
-CHANGELOG_*.md
 ROADMAP_*.md
 GUIDE_*.md
+implementation_plan.md

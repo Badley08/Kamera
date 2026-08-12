@@ -41,6 +41,7 @@ class CameraManagerInstance(
 ) {
     private val TAG = "CameraManagerInstance"
     private val cameraManager = context.getSystemService(Context.CAMERA_SERVICE) as CameraManager
+    private val imageEnhancer = ImageEnhancer(context)
     private var cameraDevice: CameraDevice? = null
     private var captureSession: CameraCaptureSession? = null
     private var mediaRecorder: MediaRecorder? = null
@@ -222,6 +223,9 @@ class CameraManagerInstance(
             val rotationDegrees = if (currentCameraId == frontCameraId) 270f else 90f
             val matrix = Matrix().apply { postRotate(rotationDegrees) }
             bitmap = Bitmap.createBitmap(bitmap, 0, 0, bitmap.width, bitmap.height, matrix, true)
+
+            // Apply TFLite super-resolution sharpness enhancement if hardware capabilities are met
+            bitmap = imageEnhancer.enhancePhoto(bitmap)
 
             val photoFile = createPhotoFile()
             FileOutputStream(photoFile).use { out ->
@@ -695,6 +699,7 @@ class CameraManagerInstance(
         stopTimer()
         stopPreviewInternal()
         stopBackgroundThread()
+        imageEnhancer.close()
         mediaRecorder?.release()
         mediaRecorder = null
     }
