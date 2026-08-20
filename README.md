@@ -30,6 +30,27 @@ Developed by **Luberisse Karl**.
 
 ---
 
+## Screenshots
+
+<p align="center">
+  <img src="app/src/main/assets/screenshots/Screenshot_20260820-162314.jpg" width="23%" alt="Kamera Screenshot 1" />
+  <img src="app/src/main/assets/screenshots/Screenshot_20260820-162321.jpg" width="23%" alt="Kamera Screenshot 2" />
+  <img src="app/src/main/assets/screenshots/Screenshot_20260820-162339.jpg" width="23%" alt="Kamera Screenshot 3" />
+  <img src="app/src/main/assets/screenshots/Screenshot_20260820-162344.jpg" width="23%" alt="Kamera Screenshot 4" />
+</p>
+
+---
+
+## Contributing
+
+Contributions are welcome, but please adhere strictly to the project's core philosophy:
+
+- **Keep it Minimalist**: The primary goal of Kamera is an ultra-clean, fluid, fast, and distraction-free UI/UX.
+- **Strict UI/UX Standards**: Any pull requests or features that add visual clutter, unnecessary complexity, or break the minimalist aesthetic will **not** be accepted.
+- **Custom / Heavy Features**: If you wish to build custom features, heavy settings, or complex functionalities that deviate from this minimalist vision, please **fork the repository** and maintain them in your personal fork.
+
+---
+
 ## License
 
 This project is open-source software licensed under the **GNU General Public License v3.0 (GPL-3.0)**.
@@ -46,3 +67,4 @@ For the full license details, see the [LICENSE](LICENSE) file or visit [gnu.org/
 ## Author
 
 - **Luberisse Karl**
+
