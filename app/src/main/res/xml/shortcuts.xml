@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="utf-8"?>
+<shortcuts xmlns:android="http://schemas.android.com/apk/res/android">
+    <shortcut
+        android:shortcutId="shortcut_photo"
+        android:enabled="true"
+        android:icon="@drawable/ic_shortcut_photo"
+        android:shortcutShortLabel="@string/shortcut_photo_short"
+        android:shortcutLongLabel="@string/shortcut_photo_long">
+        <intent
+            android:action="android.intent.action.VIEW"
+            android:targetPackage="com.karlitodev.kamera"
+            android:targetClass="com.karlitodev.kamera.MainActivity">
+            <extra
+                android:name="EXTRA_MODE"
+                android:value="PHOTO" />
+        </intent>
+        <categories android:name="android.shortcut.conversation" />
+    </shortcut>
+    <shortcut
+        android:shortcutId="shortcut_video"
+        android:enabled="true"
+        android:icon="@drawable/ic_shortcut_video"
+        android:shortcutShortLabel="@string/shortcut_video_short"
+        android:shortcutLongLabel="@string/shortcut_video_long">
+        <intent
+            android:action="android.intent.action.VIEW"
+            android:targetPackage="com.karlitodev.kamera"
+            android:targetClass="com.karlitodev.kamera.MainActivity">
+            <extra
+                android:name="EXTRA_MODE"
+                android:value="VIDEO" />
+        </intent>
+        <categories android:name="android.shortcut.conversation" />
+    </shortcut>
+</shortcuts>

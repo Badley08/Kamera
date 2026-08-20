@@ -1,7 +1,7 @@
 # Kamera
 
 <p align="center">
-  <img src="https://img.shields.io/badge/Version-5.0-red.svg" alt="Version 5.0" />
+  <img src="https://img.shields.io/badge/Version-7.0-red.svg" alt="Version 7.0" />
   <img src="https://img.shields.io/badge/License-GPL--3.0-blue.svg" alt="GPLv3 License" />
   <img src="https://img.shields.io/badge/Platform-Android-green.svg" alt="Android Platform" />
   <img src="https://img.shields.io/badge/Language-Kotlin-purple.svg" alt="Kotlin" />
@@ -13,19 +13,19 @@ Developed by **Luberisse Karl**.
 
 ---
 
-## Features (v5.0)
+## Features (v7.0)
 
+- **Dynamic Hardware Sensor Orientation**: Real-time native sensor inclination detection (`CameraCharacteristics.SENSOR_ORIENTATION` & display rotation) keeping photos and videos strictly formatted in 9:16 portrait.
+- **Quick App Launcher Shortcuts**: Long-press app icon shortcuts to jump directly into **Take a Photo** or **Record Video** modes.
 - **Fixed 30 FPS Sensor Lock**: Fixed AE target FPS range `[30, 30]` preventing framerate drops in low-light indoor environments.
 - **22 Mbps High-Bitrate Video**: Video encoding bitrate locked at 22 Mbps for crystal clear recording.
 - **Strict MediaRecorder Execution Order**: Hardware unlocking and profile configuration sequence matching native camera pipelines.
+- **Discrete High-Contrast Mode Switcher**: Dark capsule container ensuring high readability in any lighting condition.
 - **Instant Fast Startup**: Direct camera preview launch with background thread initialization.
-- **Video & Photo Modes**: Discrete mode switcher (VIDEO / PHOTO) in the view.
-- **9:16 Portrait Orientation**: Sensor capture with container orientation hints (`setOrientationHint(90)`) for smooth 30 FPS portrait playback.
 - **Pro Audio**: 2-channel stereo audio recording at 48.0 kHz.
 - **Drag-to-Zoom Gesture**: Drag up/down on the shutter button for smooth digital zoom (1.0x to 3.0x).
 - **Minimalist Zoom Pill**: Quick tap preset options (`1.0x`, `2.0x`, `3.0x`).
 - **Full Screen Edge-to-Edge**: Translucent status bar and navigation layout.
-- **Redesigned OnePlus Camera Logo**: High-contrast camera lens icon design.
 - **Gallery Integration**: Instant opening of recorded videos and photos in system player/gallery.
 
 ---
@@ -66,5 +66,5 @@ For the full license details, see the [LICENSE](LICENSE) file or visit [gnu.org/
 
 ## Author
 
-- **Luberisse Karl**
+**Luberisse Karl**
 

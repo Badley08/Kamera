@@ -53,6 +53,8 @@ class MainActivity : ComponentActivity() {
         enableEdgeToEdge()
         super.onCreate(savedInstanceState)
 
+        handleShortcutIntent(intent)
+
         cameraManager = CameraManagerInstance(this, appState)
 
         // Check required runtime permissions on activity creation
@@ -66,6 +68,14 @@ class MainActivity : ComponentActivity() {
                         Camera2Preview(
                             cameraManager = cameraManager,
                             isFrontCamera = appState.isFrontCamera.value,
+                            onFiveSecondLongPress = {
+                                val ev = cameraManager.lowerExposure()
+                                if (ev < 0) {
+                                    Toast.makeText(this@MainActivity, "Exposure reduced (Low Light / Darkened mode)", Toast.LENGTH_SHORT).show()
+                                } else {
+                                    Toast.makeText(this@MainActivity, "Exposure reset to auto", Toast.LENGTH_SHORT).show()
+                                }
+                            },
                             modifier = Modifier.fillMaxSize()
                         )
                         MainVideoScreen(
@@ -111,6 +121,7 @@ class MainActivity : ComponentActivity() {
             }
             startActivity(intent)
         } catch (e: Exception) {
+            android.util.Log.e("MainActivity", "Error opening gallery media", e)
             Toast.makeText(this, "No gallery app available.", Toast.LENGTH_SHORT).show()
         }
     }
@@ -134,6 +145,21 @@ class MainActivity : ComponentActivity() {
             showZoomInstructionToast()
         } else {
             requestPermissionsLauncher.launch(permissionsToRequest.toTypedArray())
+        }
+    }
+
+    override fun onNewIntent(intent: Intent) {
+        super.onNewIntent(intent)
+        setIntent(intent)
+        handleShortcutIntent(intent)
+    }
+
+    private fun handleShortcutIntent(intent: Intent?) {
+        val modeExtra = intent?.getStringExtra("EXTRA_MODE")
+        if (modeExtra == "PHOTO") {
+            appState.cameraMode.value = CameraMode.PHOTO
+        } else if (modeExtra == "VIDEO") {
+            appState.cameraMode.value = CameraMode.VIDEO
         }
     }
 

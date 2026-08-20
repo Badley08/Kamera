@@ -3,11 +3,14 @@
 
     <!-- Hardware feature declarations -->
     <uses-feature
+        android:name="android.hardware.camera.any"
+        android:required="true" />
+    <uses-feature
         android:name="android.hardware.camera"
         android:required="true" />
     <uses-feature
         android:name="android.hardware.camera.autofocus"
-        android:required="false" />
+        android:required="true" />
     <uses-feature
         android:name="android.hardware.microphone"
         android:required="true" />
@@ -34,16 +37,35 @@
         android:supportsRtl="true"
         android:theme="@style/Theme.Kamera">
 
+        <!-- App Startup Provider configuration -->
+        <provider
+            android:name="androidx.startup.InitializationProvider"
+            android:authorities="${applicationId}.androidx-startup"
+            android:exported="false"
+            tools:node="merge" />
+
         <activity
             android:name=".MainActivity"
             android:exported="true"
+            android:parentActivityName=".MainActivity"
             android:screenOrientation="portrait"
             android:theme="@style/Theme.Kamera">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
+
+            <!-- App Launcher Quick Shortcuts -->
+            <meta-data
+                android:name="android.app.shortcuts"
+                android:resource="@xml/shortcuts" />
         </activity>
+
+        <!-- Tooling preview activity orientation lock -->
+        <activity
+            android:name="androidx.compose.ui.tooling.PreviewActivity"
+            android:screenOrientation="portrait"
+            tools:replace="android:screenOrientation" />
     </application>
 
 </manifest>

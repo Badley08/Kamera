@@ -1,3 +1,7 @@
 <resources>
     <string name="app_name">Kamera</string>
+    <string name="shortcut_photo_short">Photo</string>
+    <string name="shortcut_photo_long">Take a Photo</string>
+    <string name="shortcut_video_short">Video</string>
+    <string name="shortcut_video_long">Record Video</string>
 </resources>

@@ -232,28 +232,39 @@ fun ZoomPillSelector(
     }
 }
 
-// Discrete Camera Mode Switcher (VIDEO / PHOTO)
+// Discrete Camera Mode Switcher (VIDEO / PHOTO) with high contrast background pill
 @Composable
 fun CameraModeSwitcher(
     currentMode: CameraMode,
     onModeSelect: (CameraMode) -> Unit
 ) {
     Row(
-        horizontalArrangement = Arrangement.spacedBy(24.dp),
+        modifier = Modifier
+            .clip(RoundedCornerShape(20.dp))
+            .background(Color.Black.copy(alpha = 0.6f))
+            .border(1.dp, Color.White.copy(alpha = 0.2f), RoundedCornerShape(20.dp))
+            .padding(horizontal = 6.dp, vertical = 4.dp),
+        horizontalArrangement = Arrangement.spacedBy(4.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {
         CameraMode.values().forEach { mode ->
             val isSelected = (mode == currentMode)
-            Text(
-                text = mode.name,
-                color = if (isSelected) Color.White else Color.Gray,
-                fontSize = 13.sp,
-                fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Normal,
-                letterSpacing = 1.sp,
+            Box(
                 modifier = Modifier
+                    .clip(RoundedCornerShape(16.dp))
+                    .background(if (isSelected) OnePlusRed else Color.Transparent)
                     .clickable { onModeSelect(mode) }
-                    .padding(vertical = 4.dp)
-            )
+                    .padding(horizontal = 14.dp, vertical = 5.dp),
+                contentAlignment = Alignment.Center
+            ) {
+                Text(
+                    text = mode.name,
+                    color = if (isSelected) Color.White else Color.White.copy(alpha = 0.7f),
+                    fontSize = 12.sp,
+                    fontWeight = FontWeight.Bold,
+                    letterSpacing = 1.sp
+                )
+            }
         }
     }
 }

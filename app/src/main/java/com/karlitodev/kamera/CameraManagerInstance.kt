@@ -59,6 +59,7 @@ class CameraManagerInstance(
     private var isFlashOn = false
     private var previewSurface: Surface? = null
     private var currentOutputFile: File? = null
+    private var currentExposureCompensation: Int = 0
 
     private var timer: Timer? = null
     private var elapsedSeconds = 0
@@ -209,6 +210,40 @@ class CameraManagerInstance(
         }
     }
 
+    // Calculate hardware sensor inclination and device orientation for strict 9:16 portrait capture
+    fun getCalculatedOrientation(): Int {
+        return try {
+            val characteristics = cameraManager.getCameraCharacteristics(currentCameraId)
+            val sensorOrientation = characteristics.get(CameraCharacteristics.SENSOR_ORIENTATION) ?: 90
+            val isFront = (currentCameraId == frontCameraId)
+
+            val deviceRotation = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
+                context.display?.rotation ?: Surface.ROTATION_0
+            } else {
+                @Suppress("DEPRECATION")
+                val windowManager = context.getSystemService(Context.WINDOW_SERVICE) as? android.view.WindowManager
+                windowManager?.defaultDisplay?.rotation ?: Surface.ROTATION_0
+            }
+
+            val degrees = when (deviceRotation) {
+                Surface.ROTATION_0 -> 0
+                Surface.ROTATION_90 -> 90
+                Surface.ROTATION_180 -> 180
+                Surface.ROTATION_270 -> 270
+                else -> 0
+            }
+
+            if (isFront) {
+                (sensorOrientation + degrees) % 360
+            } else {
+                (sensorOrientation - degrees + 360) % 360
+            }
+        } catch (e: Exception) {
+            Log.e(TAG, "Error calculating sensor orientation", e)
+            if (currentCameraId == frontCameraId) 270 else 90
+        }
+    }
+
     // Process and save high-quality photo capture
     private fun processCapturedPhoto(image: Image) {
         try {
@@ -219,9 +254,14 @@ class CameraManagerInstance(
 
             var bitmap = BitmapFactory.decodeByteArray(bytes, 0, bytes.size)
             
-            // Rotate photo for portrait display (90 degrees if back camera, 270 if front)
-            val rotationDegrees = if (currentCameraId == frontCameraId) 270f else 90f
-            val matrix = Matrix().apply { postRotate(rotationDegrees) }
+            // Native sensor inclination compensation for strict 9:16 portrait display
+            val rotationDegrees = getCalculatedOrientation().toFloat()
+            val matrix = Matrix().apply { 
+                postRotate(rotationDegrees)
+                if (currentCameraId == frontCameraId) {
+                    postScale(-1f, 1f, bitmap.width / 2f, bitmap.height / 2f)
+                }
+            }
             bitmap = Bitmap.createBitmap(bitmap, 0, 0, bitmap.width, bitmap.height, matrix, true)
 
             // Apply TFLite super-resolution sharpness enhancement if hardware capabilities are met
@@ -249,8 +289,8 @@ class CameraManagerInstance(
             builder.addTarget(reader.surface)
             applyQualitySettings(builder)
 
-            // Orientation hint for photo metadata
-            val orientation = if (currentCameraId == frontCameraId) 270 else 90
+            // Orientation hint computed dynamically via native camera characteristics
+            val orientation = getCalculatedOrientation()
             builder.set(CaptureRequest.JPEG_ORIENTATION, orientation)
 
             session.capture(builder.build(), null, backgroundHandler)
@@ -434,6 +474,28 @@ class CameraManagerInstance(
         updateRepeatingRequest()
     }
 
+    // Lower exposure/brightness when user long-presses 5 seconds on the preview
+    fun lowerExposure(): Int {
+        try {
+            val characteristics = cameraManager.getCameraCharacteristics(currentCameraId)
+            val range = characteristics.get(CameraCharacteristics.CONTROL_AE_COMPENSATION_RANGE)
+            if (range != null) {
+                // If at lowest, reset to 0; otherwise drop by 2 steps or 25% of range
+                currentExposureCompensation = if (currentExposureCompensation <= range.lower) {
+                    0
+                } else {
+                    val step = ((range.upper - range.lower) / 4).coerceAtLeast(2)
+                    (currentExposureCompensation - step).coerceAtLeast(range.lower)
+                }
+                updateRepeatingRequest()
+                return currentExposureCompensation
+            }
+        } catch (e: Exception) {
+            Log.e(TAG, "Error lowering exposure compensation", e)
+        }
+        return 0
+    }
+
     private fun updateRepeatingRequest() {
         val session = captureSession ?: return
         val device = cameraDevice ?: return
@@ -493,8 +555,29 @@ class CameraManagerInstance(
                 val cropRect = Rect(left, top, left + cropWidth, top + cropHeight)
                 builder.set(CaptureRequest.SCALER_CROP_REGION, cropRect)
             }
+
+            // Apply exposure compensation (brightness lowering)
+            val range = characteristics.get(CameraCharacteristics.CONTROL_AE_COMPENSATION_RANGE)
+            if (range != null && currentExposureCompensation != 0) {
+                builder.set(CaptureRequest.CONTROL_AE_EXPOSURE_COMPENSATION, currentExposureCompensation)
+            }
+
+            // Enable AI Scene and Face Recognition & Auto-Tracking
+            val faceModes = characteristics.get(CameraCharacteristics.STATISTICS_INFO_AVAILABLE_FACE_DETECT_MODES)
+            if (!faceModes.isNullOrEmpty()) {
+                if (faceModes.contains(CameraCharacteristics.STATISTICS_FACE_DETECT_MODE_FULL)) {
+                    builder.set(CaptureRequest.STATISTICS_FACE_DETECT_MODE, CameraCharacteristics.STATISTICS_FACE_DETECT_MODE_FULL)
+                } else if (faceModes.contains(CameraCharacteristics.STATISTICS_FACE_DETECT_MODE_SIMPLE)) {
+                    builder.set(CaptureRequest.STATISTICS_FACE_DETECT_MODE, CameraCharacteristics.STATISTICS_FACE_DETECT_MODE_SIMPLE)
+                }
+            }
+
+            val sceneModes = characteristics.get(CameraCharacteristics.CONTROL_AVAILABLE_SCENE_MODES)
+            if (!sceneModes.isNullOrEmpty() && sceneModes.contains(CameraCharacteristics.CONTROL_SCENE_MODE_FACE_PRIORITY)) {
+                builder.set(CaptureRequest.CONTROL_SCENE_MODE, CameraCharacteristics.CONTROL_SCENE_MODE_FACE_PRIORITY)
+            }
         } catch (e: Exception) {
-            Log.e(TAG, "Error applying crop region", e)
+            Log.e(TAG, "Error applying camera settings", e)
         }
     }
 
@@ -519,8 +602,8 @@ class CameraManagerInstance(
             val videoSize = getBestVideoSize()
             setVideoSize(videoSize.width, videoSize.height)
 
-            // Orientation hint for 9:16 portrait playback
-            val orientationHint = if (currentCameraId == frontCameraId) 270 else 90
+            // Orientation hint for 9:16 portrait playback calculated from native sensor inclination
+            val orientationHint = getCalculatedOrientation()
             setOrientationHint(orientationHint)
 
             // Locked 30 FPS framerate and 22 Mbps bitrate as recommended in optimization guide

@@ -1,1 +1,20 @@
+# IDE
+.idea/
+*.iml
+
+# Gradle
 /build
+/gradlew
+/gradlew.bat
+.gradle
+!gradle/wrapper/gradle-wrapper.jar
+!gradle/wrapper/gradle-wrapper.properties
+
+# Binary Files
+*.apk
+*.aab
+*.log
+*.so
+
+# Debug Assets
+debug/res
